@@ -11,11 +11,21 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        
+        /* Estilos para los selectores de estatus */
+        select.status-selector {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            padding-right: 2rem;
+        }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen p-6">
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Panel de Isla</h1>
@@ -32,22 +42,26 @@
         <!-- Tab Navigation -->
         <div class="flex space-x-1 rounded-xl bg-gray-200 p-1 mb-8">
             <button id="tab-history"
-                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none focus:ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 bg-white shadow text-indigo-700">
+                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none bg-white shadow text-indigo-700">
                 Historial
             </button>
             <button id="tab-nurses"
-                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none focus:ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400">
+                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none">
                 Enfermeros
             </button>
-            <button id="tab-register"
-                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none focus:ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400">
-                Registrar
+            <button id="tab-patients"
+                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none">
+                Pacientes
+            </button>
+            <button id="tab-beds"
+                class="w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 focus:outline-none">
+                Camas
             </button>
         </div>
 
         <!-- View: History -->
-        <div id="view-history" class="space-y-6">
-            <div class="flex justify-between items-center">
+        <div id="view-history">
+            <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Historial de Solicitudes</h2>
                 <button id="btn-refresh"
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
@@ -59,18 +73,14 @@
                 </button>
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
                 <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-blue-700">Historial completo de solicitudes de atención.</p>
-                    </div>
+                    <svg class="h-5 w-5 text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <p class="ml-3 text-sm text-blue-700">Historial completo de solicitudes de atención.</p>
                 </div>
             </div>
 
@@ -78,17 +88,14 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr
-                                class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                                 <th class="p-4">ID Solicitud</th>
                                 <th class="p-4">Camilla ID</th>
                                 <th class="p-4">Fecha/Hora</th>
                                 <th class="p-4">Estado</th>
                             </tr>
                         </thead>
-                        <tbody id="requests-table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
-                            <!-- Rows -->
-                        </tbody>
+                        <tbody id="requests-table-body" class="divide-y divide-gray-100 text-sm text-gray-700"></tbody>
                     </table>
                 </div>
                 <div id="no-requests-msg" style="display: none;" class="p-12 text-center text-gray-500">
@@ -99,98 +106,260 @@
         </div>
 
         <!-- View: Nurses -->
-        <div id="view-nurses" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
+        <div id="view-nurses" class="hidden">
+            <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Gestión de Enfermeros</h2>
-                <button onclick="loadNurses()"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refrescar Lista
-                </button>
+                <div class="flex gap-3">
+                    <button id="btn-add-nurse"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar
+                    </button>
+                    <button id="btn-refresh-nurses"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refrescar
+                    </button>
+                </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                    <h3 class="font-semibold text-gray-700">Enfermeros Registrados</h3>
-                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr
-                                class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                                 <th class="p-4">ID</th>
                                 <th class="p-4">Usuario</th>
                                 <th class="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="nurses-table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
-                            <!-- Rows -->
-                        </tbody>
+                        <tbody id="nurses-table-body" class="divide-y divide-gray-100 text-sm text-gray-700"></tbody>
                     </table>
+                </div>
+                <div id="no-nurses-msg" style="display: none;" class="p-12 text-center text-gray-500">
+                    <p class="text-lg font-medium">Sin registros</p>
+                    <p class="text-sm">No hay enfermeros registrados.</p>
                 </div>
             </div>
         </div>
 
-        <!-- View: Register -->
-        <div id="view-register" class="hidden space-y-6">
-            <h2 class="text-xl font-bold text-gray-800">Registrar Nuevo Personal</h2>
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 max-w-2xl mx-auto">
-                <h3 class="text-lg font-semibold mb-4 text-gray-700">Datos del Enfermero</h3>
-                <form id="form-add-nurse" class="space-y-4">
+        <!-- View: Patients -->
+        <div id="view-patients" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Gestión de Pacientes</h2>
+                <div class="flex gap-3">
+                    <button id="btn-add-patient"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar
+                    </button>
+                    <button id="btn-refresh-patients"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refrescar
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nombre Completo</th>
+                                <th class="p-4">Tipo Sangre</th>
+                                <th class="p-4">Padecimientos</th>
+                                <th class="p-4">Estatus</th>
+                                <th class="p-4">Cama</th>
+                                <th class="p-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-table-body" class="divide-y divide-gray-100 text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="no-patients-msg" style="display: none;" class="p-12 text-center text-gray-500">
+                    <p class="text-lg font-medium">Sin registros</p>
+                    <p class="text-sm">No hay pacientes registrados.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Beds -->
+        <div id="view-beds" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Gestión de Camas</h2>
+                <div class="flex gap-3">
+                    <button id="btn-add-bed"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar
+                    </button>
+                    <button id="btn-refresh-beds"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refrescar
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Número de Cama</th>
+                                <th class="p-4">Estado</th>
+                                <th class="p-4">Paciente Asignado</th>
+                                <th class="p-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="beds-table-body" class="divide-y divide-gray-100 text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="no-beds-msg" style="display: none;" class="p-12 text-center text-gray-500">
+                    <p class="text-lg font-medium">Sin registros</p>
+                    <p class="text-sm">No hay camas registradas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nurse Form -->
+    <div id="nurse-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <h3 id="nurse-modal-title" class="text-xl font-bold mb-6 text-gray-800">Agregar Enfermero</h3>
+            <form id="form-nurse">
+                <input type="hidden" id="nurse-id">
+                <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
                         <input type="text" id="nurse-username" required
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
                         <input type="password" id="nurse-password" required
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
-                    <div class="pt-4">
-                        <button type="submit"
-                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow transition flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Registrar Enfermero
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Assignment Modal -->
-    <div id="assignment-modal"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100">
-            <h3 class="text-xl font-bold mb-2 text-gray-800">Asignar Camilla</h3>
-            <p id="assign-nurse-name" class="mb-6 text-indigo-600 font-medium"></p>
-
-            <form id="form-assign">
-                <input type="hidden" id="assign-nurse-id">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Camilla</label>
-                    <select id="select-stretcher"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                        <!-- Options -->
-                    </select>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" id="btn-close-modal"
-                        class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium transition">Cancelar</button>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="btn-close-nurse-modal"
+                        class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">Cancelar</button>
                     <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow transition">Asignar</button>
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
-    <script type="module" src="js/island.js"></script>
+
+    <!-- Modal: Patient Form -->
+    <div id="patient-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 id="patient-modal-title" class="text-xl font-bold mb-6 text-gray-800">Agregar Paciente</h3>
+            <form id="form-patient">
+                <input type="hidden" id="patient-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="patient-name" required maxlength="150"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Nombre">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Apellidos <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="patient-lastname" required maxlength="150"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Apellidos">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Sangre</label>
+                        <select id="patient-bloodtype"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="">Seleccionar...</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Padecimientos</label>
+                        <textarea id="patient-ailments" rows="2"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                            placeholder="Describa los padecimientos del paciente"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción / Notas</label>
+                        <textarea id="patient-description" rows="3"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                            placeholder="Información adicional sobre el paciente"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="btn-close-patient-modal"
+                        class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">Cancelar</button>
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Bed Form -->
+    <div id="bed-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <h3 id="bed-modal-title" class="text-xl font-bold mb-6 text-gray-800">Agregar Cama</h3>
+            <form id="form-bed">
+                <input type="hidden" id="bed-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Número de Cama</label>
+                        <input type="text" id="bed-number" required
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="btn-close-bed-modal"
+                        class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">Cancelar</button>
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts modulares -->
+    <script type="module" src="/js/island.js"></script>
 </body>
 
 </html>
