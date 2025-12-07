@@ -1,9 +1,6 @@
-// ==================== BEDS ====================
-
 import { url } from '../config.js';
 import { showSuccess, showError } from './utils.js';
 
-// DOM Elements
 const bedsTableBody = document.getElementById('beds-table-body');
 const noBedsMsg = document.getElementById('no-beds-msg');
 const btnAddBed = document.getElementById('btn-add-bed');
@@ -20,7 +17,6 @@ export function initializeBeds() {
     btnCloseBedModal.addEventListener('click', closeBedModal);
     formBed.addEventListener('submit', saveBed);
     
-    // Expose functions to window for inline onclick handlers
     window.editBed = editBed;
     window.deleteBed = deleteBed;
     window.changeBedStatus = changeBedStatus;
