@@ -1,4 +1,6 @@
 package com.example.demo.Patient.Entity;
 
-public interface PatientRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PatientRepository extends JpaRepository<Patient, Long> {
 }

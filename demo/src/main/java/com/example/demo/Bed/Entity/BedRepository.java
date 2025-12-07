@@ -1,4 +1,7 @@
 package com.example.demo.Bed.Entity;
 
-public interface BedRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BedRepository extends JpaRepository<Bed, Long> {
+
 }
