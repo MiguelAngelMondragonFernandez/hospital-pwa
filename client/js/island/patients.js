@@ -61,7 +61,6 @@ function renderPatientsTable(patients) {
         let bedActions = '';
         
         if (patient.cama) {
-            // Tiene cama asignada
             bedInfo = `
                 <span class="inline-flex items-center gap-1 text-indigo-600 font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +81,6 @@ function renderPatientsTable(patients) {
                 </button>
             `;
         } else {
-            // Sin cama asignada
             bedInfo = '<span class="text-gray-400 italic">Sin cama</span>';
             bedActions = `
                 <button data-action="assign-bed" data-patient-id="${patient.id}" 
@@ -174,6 +172,17 @@ function openPatientModal(patient = null) {
     document.getElementById('patient-ailments').value = patient?.padecimientos || '';
     document.getElementById('patient-description').value = patient?.descripcion || '';
     
+    // Mostrar/ocultar el campo de estatus según si es edición o creación
+    const statusContainer = document.getElementById('patient-status-container');
+    if (patient) {
+        // Modo edición: mostrar el select de estatus
+        statusContainer.style.display = 'block';
+        document.getElementById('patient-status').value = patient.estatus || 'activo';
+    } else {
+        // Modo creación: ocultar el select de estatus
+        statusContainer.style.display = 'none';
+    }
+    
     patientModal.classList.remove('hidden');
 }
 
@@ -193,11 +202,16 @@ async function savePatient(e) {
         apellidos: document.getElementById('patient-lastname').value,
         tipoSangre: document.getElementById('patient-bloodtype').value,
         padecimientos: document.getElementById('patient-ailments').value,
-        descripcion: document.getElementById('patient-description').value,
+        descripcion: document.getElementById('patient-description').value
     };
     
+    // Solo agregar estatus si estamos editando
     if (id) {
         patientData.id = parseInt(id);
+        patientData.estatus = document.getElementById('patient-status').value;
+    } else {
+        // Para nuevos pacientes, usar 'activo' por defecto
+        patientData.estatus = 'activo';
     }
     
     try {
@@ -299,7 +313,6 @@ async function assignBedToPatient(patientId) {
             const data = await response.json();
             const beds = data.data || data;
             
-            // Filtrar solo camas libres
             const availableBeds = beds.filter(bed => bed.status === 'libre' && !bed.paciente);
             
             if (availableBeds.length === 0) {
@@ -307,7 +320,6 @@ async function assignBedToPatient(patientId) {
                 return;
             }
             
-            // Llenar el select con camas disponibles
             bedSelect.innerHTML = '<option value="">Seleccionar cama...</option>';
             availableBeds.forEach(bed => {
                 const option = document.createElement('option');
@@ -316,7 +328,6 @@ async function assignBedToPatient(patientId) {
                 bedSelect.appendChild(option);
             });
             
-            // Mostrar modal
             bedAssignModal.classList.remove('hidden');
         } else {
             showError('Error al cargar camas disponibles');
@@ -341,7 +352,7 @@ async function confirmAssignBed() {
         return;
     }
     
-    try {///{camaId}/asignar-paciente/{pacienteId}
+    try {
         const response = await fetch(url + `/bed/${bedId}/asignar-paciente/${assigningPatientId}`, {
             method: 'POST'
         });
@@ -384,20 +395,16 @@ async function unassignBedFromPatient(patientId) {
 // ==================== EVENT LISTENERS ====================
 
 function initializeEventListeners() {
-    // Botones principales
     btnAddPatient.addEventListener('click', () => openPatientModal());
     btnRefreshPatients.addEventListener('click', loadPatients);
     btnLogout.addEventListener('click', logout);
     
-    // Modal de paciente
     btnClosePatientModal.addEventListener('click', closePatientModal);
     formPatient.addEventListener('submit', savePatient);
     
-    // Modal de asignación de cama
     btnCloseBedAssignModal.addEventListener('click', closeBedAssignModal);
     btnConfirmAssignBed.addEventListener('click', confirmAssignBed);
     
-    // Event delegation para la tabla
     patientsTableBody.addEventListener('click', (e) => {
         const button = e.target.closest('[data-action]');
         if (!button) return;
@@ -421,7 +428,6 @@ function initializeEventListeners() {
         }
     });
     
-    // Cambio de estatus
     patientsTableBody.addEventListener('change', (e) => {
         if (e.target.dataset.action === 'change-status') {
             const patientId = parseInt(e.target.dataset.patientId);
@@ -434,12 +440,7 @@ function initializeEventListeners() {
 
 addEventListener('load', () => {
     console.log('🚀 Iniciando Panel de Isla - Pacientes...');
-    
-    // Inicializar event listeners
     initializeEventListeners();
-    
-    // Cargar datos iniciales
     loadPatients();
-    
     console.log('✅ Panel de Pacientes inicializado correctamente');
 });
