@@ -1,32 +1,21 @@
 import { url } from '../config.js';
-import { showSuccess, showError } from './utils.js';
+import { showSuccess, showError, logout } from './utils.js';
 
+// DOM Elements
 const bedsTableBody = document.getElementById('beds-table-body');
 const noBedsMsg = document.getElementById('no-beds-msg');
 const btnAddBed = document.getElementById('btn-add-bed');
 const btnRefreshBeds = document.getElementById('btn-refresh-beds');
+const btnLogout = document.getElementById('btn-logout');
 const bedModal = document.getElementById('bed-modal');
 const btnCloseBedModal = document.getElementById('btn-close-bed-modal');
 const formBed = document.getElementById('form-bed');
 
 let editingBed = null;
 
-export function initializeBeds() {
-    
-    btnAddBed.addEventListener('click', () => openBedModal());
-    btnRefreshBeds.addEventListener('click', loadBeds);
-    btnCloseBedModal.addEventListener('click', closeBedModal);
-    formBed.addEventListener('submit', saveBed);
-    
-    window.editBed = editBed;
-    window.deleteBed = deleteBed;
-    window.changeBedStatus = changeBedStatus;
-    window.updateBedStatusClass = updateBedStatusClass;
-    window.generateQR = generateQR;
-    window.viewPatientInfo = viewPatientInfo;
-}
+// ==================== CARGAR CAMAS ====================
 
-export async function loadBeds() {
+async function loadBeds() {
     try {
         const response = await fetch(url + "/bed/all");
         
@@ -43,6 +32,7 @@ export async function loadBeds() {
                 noBedsMsg.style.display = 'block';
             }
         } else {
+            console.error('Error en respuesta:', response.status);
             bedsTableBody.innerHTML = '';
             noBedsMsg.style.display = 'block';
         }
@@ -53,6 +43,95 @@ export async function loadBeds() {
         noBedsMsg.style.display = 'block';
     }
 }
+
+function renderBedsTable(beds) {
+    bedsTableBody.innerHTML = '';
+    
+    beds.forEach(bed => {
+        const statusClass = getStatusClass(bed.status);
+        
+        // Obtener nombre del paciente
+        let patientName = 'Sin paciente';
+        if (bed.paciente) {
+            patientName = `${bed.paciente.nombre || ''} ${bed.paciente.apellidos || ''}`.trim();
+        }
+        
+        // Verificar si tiene QR generado
+        const hasQR = bed.qrUrl && bed.qrUrl.length > 0;
+        
+        // Verificar si tiene paciente para deshabilitar opción "libre"
+        const hasPatient = bed.paciente !== null && bed.paciente !== undefined;
+        const disableLibreOption = hasPatient ? 'disabled' : '';
+        const libreOptionText = hasPatient ? 'Disponible (libere al paciente primero)' : 'Disponible';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="p-4 font-medium">#${bed.id}</td>
+            <td class="p-4">${bed.nombre || 'Cama ' + bed.id}</td>
+            <td class="p-4">
+                <select 
+                    data-action="change-status" 
+                    data-bed-id="${bed.id}"
+                    class="px-3 py-1 rounded text-xs font-semibold ${statusClass} border-none cursor-pointer">
+                    <option value="libre" ${bed.status === 'libre' ? 'selected' : ''} ${disableLibreOption}>
+                        ${libreOptionText}
+                    </option>
+                    <option value="ocupada" ${bed.status === 'ocupada' ? 'selected' : ''}>Ocupada</option>
+                    <option value="mantenimiento" ${bed.status === 'mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+                    <option value="limpieza" ${bed.status === 'limpieza' ? 'selected' : ''}>En limpieza</option>     
+                </select>
+            </td>
+            <td class="p-4">
+                ${bed.paciente ? `
+                    <button data-action="view-patient" data-bed-id="${bed.id}"
+                        class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        ${patientName}
+                    </button>
+                ` : `
+                    <span class="text-gray-400 italic">${patientName}</span>
+                `}
+            </td>
+            <td class="p-4 text-right">
+                <div class="flex justify-end gap-2">
+                    ${hasQR ? `
+                        <button data-action="view-qr" data-qr-url="${bed.qrUrl}"
+                            class="text-blue-600 hover:text-blue-800 font-medium" 
+                            title="Ver QR">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                        </button>
+                    ` : `
+                        <button data-action="generate-qr" data-bed-id="${bed.id}"
+                            class="text-green-600 hover:text-green-800 font-medium" 
+                            title="Generar QR">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    `}
+                    <button data-action="edit" data-bed-id="${bed.id}"
+                        class="text-indigo-600 hover:text-indigo-800 font-medium">
+                        Editar
+                    </button>
+                    <button data-action="delete" data-bed-id="${bed.id}"
+                        class="text-red-600 hover:text-red-800 font-medium">
+                        Eliminar
+                    </button>
+                </div>
+            </td>
+        `;
+        bedsTableBody.appendChild(row);
+    });
+}
+
+// ==================== UTILIDADES ====================
 
 function getStatusClass(status) {
     switch(status) {
@@ -88,97 +167,10 @@ function updateBedStatusClass(selectElement) {
     const newStatus = selectElement.value;
     const newClass = getStatusClass(newStatus);
     
-    selectElement.className = 'px-3 py-1 rounded text-xs font-semibold border-none cursor-pointer';
-    selectElement.className += ' ' + newClass;
+    selectElement.className = 'px-3 py-1 rounded text-xs font-semibold border-none cursor-pointer ' + newClass;
 }
 
-function renderBedsTable(beds) {
-    bedsTableBody.innerHTML = '';
-    
-    beds.forEach(bed => {
-        const statusClass = getStatusClass(bed.status);
-        const statusText = getStatusText(bed.status);
-        
-        // Obtener nombre del paciente
-        let patientName = 'Sin paciente';
-        if (bed.paciente) {
-            patientName = `${bed.paciente.nombre || ''} ${bed.paciente.apellidos || ''}`.trim();
-        }
-        
-        // Verificar si tiene QR generado
-        const hasQR = bed.qrUrl && bed.qrUrl.length > 0;
-        
-        // Verificar si tiene paciente para deshabilitar opción "libre"
-        const hasPatient = bed.paciente !== null && bed.paciente !== undefined;
-        const disableLibreOption = hasPatient ? 'disabled' : '';
-        const libreOptionText = hasPatient ? 'Disponible (libere al paciente primero)' : 'Disponible';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td class="p-4 font-medium">#${bed.id}</td>
-            <td class="p-4">${bed.nombre || 'Cama ' + bed.id}</td>
-            <td class="p-4">
-                <select 
-                    id="bed-status-${bed.id}"
-                    onchange="updateBedStatusClass(this); changeBedStatus(${bed.id}, this.value)" 
-                    class="px-3 py-1 rounded text-xs font-semibold ${statusClass} border-none cursor-pointer">
-                    <option value="libre" ${bed.status === 'libre' ? 'selected' : ''} ${disableLibreOption}>
-                        ${libreOptionText}
-                    </option>
-                    <option value="ocupada" ${bed.status === 'ocupada' ? 'selected' : ''}>Ocupada</option>
-                    <option value="mantenimiento" ${bed.status === 'mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
-                    <option value="limpieza" ${bed.status === 'limpieza' ? 'selected' : ''}>En limpieza</option>     
-                </select>
-            </td>
-            <td class="p-4">
-                ${bed.paciente ? `
-                    <button onclick="viewPatientInfo(${bed.id})" 
-                        class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        ${patientName}
-                    </button>
-                ` : `
-                    <span class="text-gray-400 italic">${patientName}</span>
-                `}
-            </td>
-            <td class="p-4 text-right">
-                <div class="flex justify-end gap-2">
-                    ${hasQR ? `
-                        <button onclick="window.open('${bed.qrUrl}', '_blank')" 
-                            class="text-blue-600 hover:text-blue-800 font-medium" 
-                            title="Ver QR">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                        </button>
-                    ` : `
-                        <button onclick="generateQR(${bed.id})" 
-                            class="text-green-600 hover:text-green-800 font-medium" 
-                            title="Generar QR">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                        </button>
-                    `}
-                    <button onclick="editBed(${bed.id})" 
-                        class="text-indigo-600 hover:text-indigo-800 font-medium">
-                        Editar
-                    </button>
-                    <button onclick="deleteBed(${bed.id})" 
-                        class="text-red-600 hover:text-red-800 font-medium">
-                        Eliminar
-                    </button>
-                </div>
-            </td>
-        `;
-        bedsTableBody.appendChild(row);
-    });
-}
+// ==================== MODAL CAMA ====================
 
 function openBedModal(bed = null) {
     editingBed = bed ? bed.id : null;
@@ -235,6 +227,8 @@ async function saveBed(e) {
     }
 }
 
+// ==================== CRUD CAMAS ====================
+
 async function deleteBed(id) {
     if (!confirm('¿Está seguro de eliminar esta cama?')) return;
     
@@ -273,7 +267,7 @@ async function editBed(id) {
     }
 }
 
-async function changeBedStatus(bedId, newStatus) {
+async function changeBedStatus(bedId, newStatus, selectElement) {
     try {
         const response = await fetch(url + `/bed/${bedId}/change-status/${newStatus}`, {
             method: 'PUT'
@@ -283,6 +277,7 @@ async function changeBedStatus(bedId, newStatus) {
         
         if (response.ok) {
             showSuccess(`Estatus cambiado a: ${getStatusText(newStatus)}`);
+            updateBedStatusClass(selectElement);
         } else {
             // Mostrar el mensaje de error específico del backend
             showError(data.message || 'Error al cambiar estatus');
@@ -297,7 +292,8 @@ async function changeBedStatus(bedId, newStatus) {
     }
 }
 
-// Función para generar QR
+// ==================== QR Y PACIENTE ====================
+
 async function generateQR(bedId) {
     if (!confirm('¿Desea generar el código QR para esta cama?')) return;
     
@@ -326,7 +322,6 @@ async function generateQR(bedId) {
     }
 }
 
-// Función para ver información del paciente
 async function viewPatientInfo(bedId) {
     try {
         const response = await fetch(url + `/bed/${bedId}/paciente`);
@@ -344,8 +339,7 @@ async function viewPatientInfo(bedId) {
                         <h3 class="text-2xl font-bold text-gray-800">
                             Información del Paciente
                         </h3>
-                        <button onclick="this.closest('.fixed').remove()" 
-                            class="text-gray-400 hover:text-gray-600">
+                        <button class="close-modal text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -398,8 +392,7 @@ async function viewPatientInfo(bedId) {
                     </div>
                     
                     <div class="mt-6 flex justify-end">
-                        <button onclick="this.closest('.fixed').remove()" 
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">
+                        <button class="close-modal bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">
                             Cerrar
                         </button>
                     </div>
@@ -407,6 +400,18 @@ async function viewPatientInfo(bedId) {
             `;
             
             document.body.appendChild(modal);
+            
+            // Event listeners para cerrar el modal
+            modal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => modal.remove());
+            });
+            
+            // Cerrar al hacer clic fuera del modal
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         } else {
             const error = await response.json();
             showError(error.message || 'No se pudo obtener información del paciente');
@@ -416,3 +421,65 @@ async function viewPatientInfo(bedId) {
         showError('Error de conexión al obtener información');
     }
 }
+
+// ==================== EVENT LISTENERS ====================
+
+function initializeEventListeners() {
+    // Botones principales
+    btnAddBed.addEventListener('click', () => openBedModal());
+    btnRefreshBeds.addEventListener('click', loadBeds);
+    btnLogout.addEventListener('click', logout);
+    
+    // Modal de cama
+    btnCloseBedModal.addEventListener('click', closeBedModal);
+    formBed.addEventListener('submit', saveBed);
+    
+    // Event delegation para la tabla
+    bedsTableBody.addEventListener('click', (e) => {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+        
+        const action = button.dataset.action;
+        const bedId = parseInt(button.dataset.bedId);
+        
+        switch(action) {
+            case 'edit':
+                editBed(bedId);
+                break;
+            case 'delete':
+                deleteBed(bedId);
+                break;
+            case 'generate-qr':
+                generateQR(bedId);
+                break;
+            case 'view-qr':
+                window.open(button.dataset.qrUrl, '_blank');
+                break;
+            case 'view-patient':
+                viewPatientInfo(bedId);
+                break;
+        }
+    });
+    
+    // Cambio de estatus
+    bedsTableBody.addEventListener('change', (e) => {
+        if (e.target.dataset.action === 'change-status') {
+            const bedId = parseInt(e.target.dataset.bedId);
+            changeBedStatus(bedId, e.target.value, e.target);
+        }
+    });
+}
+
+// ==================== INICIALIZACIÓN ====================
+
+addEventListener('load', () => {
+    console.log('🚀 Iniciando Panel de Isla - Camas...');
+    
+    // Inicializar event listeners
+    initializeEventListeners();
+    
+    // Cargar datos iniciales
+    loadBeds();
+    
+    console.log('✅ Panel de Camas inicializado correctamente');
+});

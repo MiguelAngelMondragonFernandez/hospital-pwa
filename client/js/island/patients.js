@@ -1,11 +1,12 @@
 import { url } from '../config.js';
-import { showSuccess, showError } from './utils.js';
+import { showSuccess, showError, logout } from './utils.js';
 
 // DOM Elements
 const patientsTableBody = document.getElementById('patients-table-body');
 const noPatientsMsg = document.getElementById('no-patients-msg');
 const btnAddPatient = document.getElementById('btn-add-patient');
 const btnRefreshPatients = document.getElementById('btn-refresh-patients');
+const btnLogout = document.getElementById('btn-logout');
 const patientModal = document.getElementById('patient-modal');
 const btnClosePatientModal = document.getElementById('btn-close-patient-modal');
 const formPatient = document.getElementById('form-patient');
@@ -20,7 +21,7 @@ let editingPatient = null;
 let assigningPatientId = null;
 
 
-export async function loadPatients() {
+async function loadPatients() {
     try {
         const response = await fetch(url + "/patient/all");
         
@@ -54,7 +55,6 @@ function renderPatientsTable(patients) {
     
     patients.forEach(patient => {
         const statusClass = getStatusClass(patient.estatus);
-        const statusText = getStatusText(patient.estatus);
         
         // Obtener información de la cama
         let bedInfo = 'Sin cama';
@@ -72,7 +72,7 @@ function renderPatientsTable(patients) {
                 </span>
             `;
             bedActions = `
-                <button onclick="unassignBedFromPatient(${patient.id})" 
+                <button data-action="unassign-bed" data-patient-id="${patient.id}" 
                     class="text-orange-600 hover:text-orange-800 font-medium" 
                     title="Liberar cama">
                     <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ function renderPatientsTable(patients) {
             // Sin cama asignada
             bedInfo = '<span class="text-gray-400 italic">Sin cama</span>';
             bedActions = `
-                <button onclick="assignBedToPatient(${patient.id})" 
+                <button data-action="assign-bed" data-patient-id="${patient.id}" 
                     class="text-green-600 hover:text-green-800 font-medium" 
                     title="Asignar cama">
                     <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ function renderPatientsTable(patients) {
             </td>
             <td class="p-4">${patient.padecimientos || 'Ninguno'}</td>
             <td class="p-4">
-                <select onchange="changePatientStatus(${patient.id}, this.value)" 
+                <select data-action="change-status" data-patient-id="${patient.id}" 
                     class="px-3 py-1 rounded text-xs font-semibold ${statusClass} border-none cursor-pointer">
                     <option value="activo" ${patient.estatus === 'activo' ? 'selected' : ''}>Activo</option>
                     <option value="inactivo" ${patient.estatus === 'inactivo' ? 'selected' : ''}>Inactivo</option>
@@ -118,11 +118,11 @@ function renderPatientsTable(patients) {
             <td class="p-4 text-right">
                 <div class="flex justify-end gap-2">
                     ${bedActions}
-                    <button onclick="editPatient(${patient.id})" 
+                    <button data-action="edit" data-patient-id="${patient.id}" 
                         class="text-indigo-600 hover:text-indigo-800 font-medium">
                         Editar
                     </button>
-                    <button onclick="deletePatient(${patient.id})" 
+                    <button data-action="delete" data-patient-id="${patient.id}" 
                         class="text-red-600 hover:text-red-800 font-medium">
                         Eliminar
                     </button>
@@ -132,6 +132,8 @@ function renderPatientsTable(patients) {
         patientsTableBody.appendChild(row);
     });
 }
+
+// ==================== UTILIDADES ====================
 
 function getStatusClass(status) {
     switch(status) {
@@ -158,6 +160,8 @@ function getStatusText(status) {
             return 'Desconocido';
     }
 }
+
+// ==================== MODAL PACIENTE ====================
 
 function openPatientModal(patient = null) {
     editingPatient = patient ? patient.id : null;
@@ -222,6 +226,8 @@ async function savePatient(e) {
     }
 }
 
+// ==================== CRUD PACIENTES ====================
+
 async function changePatientStatus(patientId, newStatus) {
     try {
         const response = await fetch(url + `/patient/${patientId}/change-status/${newStatus}`, {
@@ -281,12 +287,11 @@ async function editPatient(id) {
     }
 }
 
-// ==================== FUNCIONES DE ASIGNACIÓN DE CAMA ====================
+// ==================== ASIGNACIÓN DE CAMA ====================
 
 async function assignBedToPatient(patientId) {
     assigningPatientId = patientId;
     
-    // Cargar camas disponibles
     try {
         const response = await fetch(url + "/bed/all");
         
@@ -336,9 +341,9 @@ async function confirmAssignBed() {
         return;
     }
     
-    try {
-        const response = await fetch(url + `/patient/${assigningPatientId}/assign-bed/${bedId}`, {
-            method: 'PUT'
+    try {///{camaId}/asignar-paciente/{pacienteId}
+        const response = await fetch(url + `/bed/${bedId}/asignar-paciente/${assigningPatientId}`, {
+            method: 'POST'
         });
         
         if (response.ok) {
@@ -375,3 +380,66 @@ async function unassignBedFromPatient(patientId) {
         showError('Error de conexión al liberar cama');
     }
 }
+
+// ==================== EVENT LISTENERS ====================
+
+function initializeEventListeners() {
+    // Botones principales
+    btnAddPatient.addEventListener('click', () => openPatientModal());
+    btnRefreshPatients.addEventListener('click', loadPatients);
+    btnLogout.addEventListener('click', logout);
+    
+    // Modal de paciente
+    btnClosePatientModal.addEventListener('click', closePatientModal);
+    formPatient.addEventListener('submit', savePatient);
+    
+    // Modal de asignación de cama
+    btnCloseBedAssignModal.addEventListener('click', closeBedAssignModal);
+    btnConfirmAssignBed.addEventListener('click', confirmAssignBed);
+    
+    // Event delegation para la tabla
+    patientsTableBody.addEventListener('click', (e) => {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+        
+        const action = button.dataset.action;
+        const patientId = parseInt(button.dataset.patientId);
+        
+        switch(action) {
+            case 'edit':
+                editPatient(patientId);
+                break;
+            case 'delete':
+                deletePatient(patientId);
+                break;
+            case 'assign-bed':
+                assignBedToPatient(patientId);
+                break;
+            case 'unassign-bed':
+                unassignBedFromPatient(patientId);
+                break;
+        }
+    });
+    
+    // Cambio de estatus
+    patientsTableBody.addEventListener('change', (e) => {
+        if (e.target.dataset.action === 'change-status') {
+            const patientId = parseInt(e.target.dataset.patientId);
+            changePatientStatus(patientId, e.target.value);
+        }
+    });
+}
+
+// ==================== INICIALIZACIÓN ====================
+
+addEventListener('load', () => {
+    console.log('🚀 Iniciando Panel de Isla - Pacientes...');
+    
+    // Inicializar event listeners
+    initializeEventListeners();
+    
+    // Cargar datos iniciales
+    loadPatients();
+    
+    console.log('✅ Panel de Pacientes inicializado correctamente');
+});

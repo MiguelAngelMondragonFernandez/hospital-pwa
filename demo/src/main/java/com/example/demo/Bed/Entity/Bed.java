@@ -1,5 +1,6 @@
 package com.example.demo.Bed.Entity;
 
+import com.example.demo.Nurse.NurseAssignment;
 import com.example.demo.Patient.Entity.Patient;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Table(name = "beds")
 @Entity
@@ -44,6 +46,11 @@ public class Bed {
     @OneToOne(mappedBy = "cama", fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"cama", "hibernateLazyInitializer", "handler"})
     private Patient paciente;
+
+    // Relación One-to-Many con NurseAssignment
+    @OneToMany(mappedBy = "bed", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"bed", "hibernateLazyInitializer", "handler"})
+    private List<NurseAssignment> nurseAssignments;
 
     public enum BedStatus {
         libre,

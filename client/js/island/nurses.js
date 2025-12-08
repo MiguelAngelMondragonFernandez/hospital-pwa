@@ -1,37 +1,27 @@
-// ==================== NURSES ====================
-
 import { url } from '../config.js';
-import { showSuccess, showError } from './utils.js';
+import { showSuccess, showError, logout } from './utils.js';
 
 // DOM Elements
 const nursesTableBody = document.getElementById('nurses-table-body');
 const noNursesMsg = document.getElementById('no-nurses-msg');
 const btnAddNurse = document.getElementById('btn-add-nurse');
 const btnRefreshNurses = document.getElementById('btn-refresh-nurses');
+const btnLogout = document.getElementById('btn-logout');
 const nurseModal = document.getElementById('nurse-modal');
 const btnCloseNurseModal = document.getElementById('btn-close-nurse-modal');
 const formNurse = document.getElementById('form-nurse');
 
 let editingNurse = null;
 
-export function initializeNurses() {
-    btnAddNurse.addEventListener('click', () => openNurseModal());
-    btnRefreshNurses.addEventListener('click', loadNurses);
-    btnCloseNurseModal.addEventListener('click', closeNurseModal);
-    formNurse.addEventListener('submit', saveNurse);
-    
-    // Expose functions to window for inline onclick handlers
-    window.editNurse = (id, username) => openNurseModal(id, username);
-    window.deleteNurse = deleteNurse;
-}
 
-export async function loadNurses() {
+async function loadNurses() {
     try {
         const response = await fetch(url + "/nurse/all");
         
         if (response.ok) {
             const data = await response.json();
             const nurses = data.data || data;
+            console.log('Enfermeros cargados:', nurses);
 
             if (nurses && nurses.length > 0) {
                 renderNursesTable(nurses);
@@ -41,11 +31,13 @@ export async function loadNurses() {
                 noNursesMsg.style.display = 'block';
             }
         } else {
+            console.error('Error en respuesta:', response.status);
             nursesTableBody.innerHTML = '';
             noNursesMsg.style.display = 'block';
         }
     } catch (error) {
         console.error("Error loading nurses:", error);
+        showError('Error al cargar enfermeros');
         nursesTableBody.innerHTML = '';
         noNursesMsg.style.display = 'block';
     }
@@ -60,19 +52,23 @@ function renderNursesTable(nurses) {
             <td class="p-4 font-medium">#${nurse.id}</td>
             <td class="p-4">${nurse.username}</td>
             <td class="p-4 text-right">
-                <button onclick="editNurse(${nurse.id}, '${nurse.username}')" 
-                    class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">
-                    Editar
-                </button>
-                <button onclick="deleteNurse(${nurse.id})" 
-                    class="text-red-600 hover:text-red-800 font-medium">
-                    Eliminar
-                </button>
+                <div class="flex justify-end gap-2">
+                    <button data-action="edit" data-nurse-id="${nurse.id}" data-username="${nurse.username}"
+                        class="text-indigo-600 hover:text-indigo-800 font-medium">
+                        Editar
+                    </button>
+                    <button data-action="delete" data-nurse-id="${nurse.id}"
+                        class="text-red-600 hover:text-red-800 font-medium">
+                        Eliminar
+                    </button>
+                </div>
             </td>
         `;
         nursesTableBody.appendChild(row);
     });
 }
+
+// ==================== MODAL ENFERMERO ====================
 
 function openNurseModal(id = null, username = '') {
     editingNurse = id;
@@ -80,7 +76,7 @@ function openNurseModal(id = null, username = '') {
     document.getElementById('nurse-id').value = id || '';
     document.getElementById('nurse-username').value = username;
     document.getElementById('nurse-password').value = '';
-    document.getElementById('nurse-password').required = !id;
+    document.getElementById('nurse-password').required = !id; // Solo requerido al crear
     nurseModal.classList.remove('hidden');
 }
 
@@ -103,6 +99,7 @@ async function saveNurse(e) {
         needAuthentication: true
     };
     
+    // Solo incluir password si se proporcionó
     if (password) {
         nurseData.password = password;
     }
@@ -133,6 +130,8 @@ async function saveNurse(e) {
     }
 }
 
+// ==================== CRUD ENFERMEROS ====================
+
 async function deleteNurse(id) {
     if (!confirm('¿Está seguro de eliminar este enfermero?')) return;
     
@@ -145,10 +144,57 @@ async function deleteNurse(id) {
             showSuccess('Enfermero eliminado exitosamente');
             loadNurses();
         } else {
-            showError('Error al eliminar enfermero');
+            const error = await response.json();
+            showError(error.message || 'Error al eliminar enfermero');
         }
     } catch (error) {
         console.error('Error:', error);
         showError('Error de conexión al eliminar enfermero');
     }
 }
+
+// ==================== EVENT LISTENERS ====================
+
+function initializeEventListeners() {
+    // Botones principales
+    btnAddNurse.addEventListener('click', () => openNurseModal());
+    btnRefreshNurses.addEventListener('click', loadNurses);
+    btnLogout.addEventListener('click', logout);
+    
+    // Modal de enfermero
+    btnCloseNurseModal.addEventListener('click', closeNurseModal);
+    formNurse.addEventListener('submit', saveNurse);
+    
+    // Event delegation para la tabla
+    nursesTableBody.addEventListener('click', (e) => {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+        
+        const action = button.dataset.action;
+        const nurseId = parseInt(button.dataset.nurseId);
+        
+        switch(action) {
+            case 'edit':
+                const username = button.dataset.username;
+                openNurseModal(nurseId, username);
+                break;
+            case 'delete':
+                deleteNurse(nurseId);
+                break;
+        }
+    });
+}
+
+// ==================== INICIALIZACIÓN ====================
+
+addEventListener('load', () => {
+    console.log('🚀 Iniciando Panel de Isla - Enfermeros...');
+    
+    // Inicializar event listeners
+    initializeEventListeners();
+    
+    // Cargar datos iniciales
+    loadNurses();
+    
+    console.log('✅ Panel de Enfermeros inicializado correctamente');
+});
