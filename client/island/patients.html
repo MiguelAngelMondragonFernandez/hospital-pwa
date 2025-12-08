@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Isla - Pacientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+        }
+
+        select.status-selector {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            padding-right: 2rem;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="ml-2 text-xl font-bold text-gray-800">Panel de Isla</span>
+                    </div>
+                    <div class="hidden md:ml-8 md:flex md:space-x-4">
+                        <a href="../island.html"
+                            class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                            Historial
+                        </a>
+                        <a href="./patients.html"
+                            class="bg-indigo-50 text-indigo-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Pacientes
+                        </a>
+                        <a href="./nurses.html"
+                            class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                            Enfermeros
+                        </a>
+                        <a href="./beds.html"
+                            class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                            Camas
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="btn-logout"
+                        class="bg-white hover:bg-gray-50 text-red-600 border border-red-200 font-semibold py-2 px-4 rounded-lg shadow-sm transition text-sm">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="md:hidden border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="../island.html"
+                    class="bg-indigo-50 text-indigo-700 block px-3 py-2 rounded-md text-base font-medium">
+                    Historial
+                </a>
+                <a href="./patients.html"
+                    class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    Pacientes
+                </a>
+                <a href="./nurses.html"
+                    class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    Enfermeros
+                </a>
+                <a href="./beds.html"
+                    class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    Camas
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestión de Pacientes</h1>
+            <p class="text-gray-500 text-sm mt-1">Administre pacientes y asignaciones de camas</p>
+        </div>
+
+        <div class="flex justify-end mb-6 gap-3">
+            <button id="btn-add-patient"
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar
+            </button>
+            <button id="btn-refresh-patients"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refrescar
+            </button>
+        </div>
+
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
+            <div class="flex">
+                <svg class="h-5 w-5 text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
+                </svg>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700 font-medium">Asignación de camas</p>
+                    <p class="text-xs text-blue-600 mt-1">
+                        Use el botón <strong>[+]</strong> para asignar una cama disponible al paciente.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr
+                            class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                            <th class="p-4">ID</th>
+                            <th class="p-4">Nombre Completo</th>
+                            <th class="p-4">Tipo Sangre</th>
+                            <th class="p-4">Padecimientos</th>
+                            <th class="p-4">Estatus</th>
+                            <th class="p-4">Cama</th>
+                            <th class="p-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patients-table-body" class="divide-y divide-gray-100 text-sm text-gray-700"></tbody>
+                </table>
+            </div>
+            <div id="no-patients-msg" style="display: none" class="p-12 text-center text-gray-500">
+                <p class="text-lg font-medium">Sin registros</p>
+                <p class="text-sm">No hay pacientes registrados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Patient Form -->
+    <div id="patient-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 id="patient-modal-title" class="text-xl font-bold mb-6 text-gray-800">Agregar Paciente</h3>
+            <form id="form-patient">
+                <input type="hidden" id="patient-id" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="patient-name" required maxlength="150"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Nombre" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Apellidos <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="patient-lastname" required maxlength="150"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Apellidos" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Sangre</label>
+                        <select id="patient-bloodtype"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="">Seleccionar...</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div></div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Padecimientos</label>
+                        <textarea id="patient-ailments" rows="2"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                            placeholder="Describa los padecimientos del paciente"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción / Notas</label>
+                        <textarea id="patient-description" rows="3"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                            placeholder="Información adicional sobre el paciente"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="btn-close-patient-modal"
+                        class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Asignar Cama -->
+    <div id="bed-assign-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-indigo-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Asignar Cama</h3>
+                    <p class="text-sm text-gray-500">Seleccione una cama disponible</p>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cama Disponible</label>
+                <select id="bed-select"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-base">
+                    <option value="">Cargando camas...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">Solo se muestran camas con estado "libre"</p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="btn-close-bed-assign-modal"
+                    class="px-5 py-2 text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirm-assign-bed"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow transition">
+                    Asignar Cama
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/island/patients.js"></script>
+
+</body>
+
+</html>

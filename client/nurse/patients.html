@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información del Paciente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-md">
+        <!-- Back Button -->
+        <button id="btn-back" class="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-800 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span class="font-medium">Volver</span>
+        </button>
+
+        <!-- Status Badge -->
+        <div id="status-badge" class="mb-4 text-center">
+            <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Patient Card -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-4">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="patient-name" class="text-2xl font-bold">Cargando...</h2>
+                        <p class="text-blue-100 text-sm">Información del Paciente</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Info -->
+            <div class="p-6 space-y-4">
+                <!-- Blood Type -->
+                <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Tipo de Sangre</p>
+                        <p id="blood-type" class="text-lg font-semibold text-gray-800">--</p>
+                    </div>
+                </div>
+
+                <!-- Bed Number -->
+                <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Cama</p>
+                        <p id="bed-id" class="text-lg font-semibold text-gray-800">--</p>
+                    </div>
+                </div>
+
+                <!-- Conditions -->
+                <div class="pb-4 border-b border-gray-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Padecimientos</p>
+                    </div>
+                    <p id="conditions" class="text-gray-700 leading-relaxed">--</p>
+                </div>
+
+                <!-- Medical Description -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Descripción Médica</p>
+                    </div>
+                    <p id="description" class="text-gray-700 leading-relaxed">--</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="btn-attend" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Marcar como Atendido
+        </button>
+
+        <!-- Loader -->
+        <div id="loader" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 flex flex-col items-center">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
+                <p class="text-gray-700 font-semibold">Procesando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8082/api';
+
+        // Back button
+        document.getElementById('btn-back').addEventListener('click', () => {
+            window.location.href = '../nurse.html';
+        });
+
+        // Show/Hide loader
+        function showLoader(show) {
+            document.getElementById('loader').classList.toggle('hidden', !show);
+        }
+
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            const statusMap = {
+                'verde': { bg: 'bg-green-100', text: 'text-green-700', icon: '🟢', label: 'Estado Normal' },
+                'amarillo': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: '🟡', label: 'Precaución' },
+                'rojo': { bg: 'bg-red-100', text: 'text-red-700', icon: '🔴', label: 'Urgente' }
+            };
+            
+            const config = statusMap[status] || statusMap['verde'];
+            
+            return `
+                <div class="inline-flex items-center gap-2 ${config.bg} ${config.text} px-6 py-3 rounded-full font-semibold text-lg shadow-md">
+                    <span class="text-2xl">${config.icon}</span>
+                    <span>${config.label}</span>
+                </div>
+            `;
+        }
+
+        // Load patient data
+        function loadPatientData() {
+            const bedData = localStorage.getItem('currentBed');
+            
+            if (!bedData) {
+                alert('❌ No hay información de cama');
+                window.location.href = '../nurse.html';
+                return;
+            }
+
+           const response = JSON.parse(bedData);
+            const data = response.data; // Extract data from response object
+            
+            // Populate fields with correct property names
+            document.getElementById('patient-name').textContent = data.patientName || 'No asignado';
+            document.getElementById('blood-type').textContent = data.bloodType || '--';
+            document.getElementById('bed-id').textContent = `Cama #${data.bedId}`;
+            document.getElementById('conditions').textContent = data.ailments || 'Sin padecimientos registrados';
+            document.getElementById('description').textContent = data.description || 'Sin descripción disponible';
+            
+            // Set status badge based on bedStatus
+            // Map bedStatus to color status (you may need to adjust this based on your backend)
+            let statusColor = 'verde'; // default
+            if (data.bedStatus === 'urgente') statusColor = 'rojo';
+            else if (data.bedStatus === 'precaucion') statusColor = 'amarillo';
+            
+            // Set status badge
+            document.getElementById('status-badge').innerHTML = getStatusBadge(data.estado);
+            
+            // Store request ID if available
+            if (data.solicitudId) {
+                document.getElementById('btn-attend').dataset.requestId = data.solicitudId;
+            } else {
+                // If no active request, disable button
+                document.getElementById('btn-attend').disabled = true;
+                document.getElementById('btn-attend').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('btn-attend').innerHTML = '✓ Sin solicitud activa';
+            }
+        }
+
+        // Mark as attended
+        document.getElementById('btn-attend').addEventListener('click', async () => {
+            const requestId = document.getElementById('btn-attend').dataset.requestId;
+            
+            if (!requestId) {
+                alert('No hay solicitud activa para atender');
+                return;
+            }
+
+            if (!confirm('¿Confirmar que se ha atendido al paciente?')) {
+                return;
+            }
+
+            showLoader(true);
+
+            try {
+                const response = await fetch(`${API_URL}/solicitudes/${requestId}/atender`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                showLoader(false);
+
+                if (response.ok) {
+                    alert('✅ Paciente marcado como atendido');
+                    localStorage.removeItem('currentBed');
+                    window.location.href = '../nurse.html';
+                } else {
+                    alert('❌ Error al marcar como atendido');
+                }
+            } catch (error) {
+                showLoader(false);
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        });
+
+        // Load data on page load
+        window.addEventListener('load', loadPatientData);
+    </script>
+</body>
+</html>
