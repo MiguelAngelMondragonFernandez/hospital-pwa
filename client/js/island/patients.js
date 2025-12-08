@@ -1,5 +1,3 @@
-// ==================== PATIENTS ====================
-
 import { url } from '../config.js';
 import { showSuccess, showError } from './utils.js';
 
@@ -12,19 +10,15 @@ const patientModal = document.getElementById('patient-modal');
 const btnClosePatientModal = document.getElementById('btn-close-patient-modal');
 const formPatient = document.getElementById('form-patient');
 
-let editingPatient = null;
+// Modal de asignación de cama
+const bedAssignModal = document.getElementById('bed-assign-modal');
+const btnCloseBedAssignModal = document.getElementById('btn-close-bed-assign-modal');
+const bedSelect = document.getElementById('bed-select');
+const btnConfirmAssignBed = document.getElementById('btn-confirm-assign-bed');
 
-export function initializePatients() {
-    btnAddPatient.addEventListener('click', () => openPatientModal());
-    btnRefreshPatients.addEventListener('click', loadPatients);
-    btnClosePatientModal.addEventListener('click', closePatientModal);
-    formPatient.addEventListener('submit', savePatient);
-    
-    // Expose functions to window for inline onclick handlers
-    window.editPatient = editPatient;
-    window.deletePatient = deletePatient;
-    window.changePatientStatus = changePatientStatus;
-}
+let editingPatient = null;
+let assigningPatientId = null;
+
 
 export async function loadPatients() {
     try {
@@ -33,7 +27,7 @@ export async function loadPatients() {
         if (response.ok) {
             const data = await response.json();
             const patients = data.data || data;
-            console.log('Pacientes cargados:', data);
+            console.log('Pacientes cargados:', patients);
             
             if (patients && patients.length > 0) {
                 renderPatientsTable(patients);
@@ -59,9 +53,48 @@ function renderPatientsTable(patients) {
     patientsTableBody.innerHTML = '';
     
     patients.forEach(patient => {
-        // Determinar el estilo del badge según el estatus
         const statusClass = getStatusClass(patient.estatus);
         const statusText = getStatusText(patient.estatus);
+        
+        // Obtener información de la cama
+        let bedInfo = 'Sin cama';
+        let bedActions = '';
+        
+        if (patient.cama) {
+            // Tiene cama asignada
+            bedInfo = `
+                <span class="inline-flex items-center gap-1 text-indigo-600 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Cama #${patient.cama.id}
+                </span>
+            `;
+            bedActions = `
+                <button onclick="unassignBedFromPatient(${patient.id})" 
+                    class="text-orange-600 hover:text-orange-800 font-medium" 
+                    title="Liberar cama">
+                    <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            `;
+        } else {
+            // Sin cama asignada
+            bedInfo = '<span class="text-gray-400 italic">Sin cama</span>';
+            bedActions = `
+                <button onclick="assignBedToPatient(${patient.id})" 
+                    class="text-green-600 hover:text-green-800 font-medium" 
+                    title="Asignar cama">
+                    <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            `;
+        }
         
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -81,16 +114,19 @@ function renderPatientsTable(patients) {
                     <option value="alta" ${patient.estatus === 'alta' ? 'selected' : ''}>Alta</option>
                 </select>
             </td>
-            <td class="p-4">${patient.camaId ? `Cama #${patient.camaId}` : 'Sin cama'}</td>
+            <td class="p-4">${bedInfo}</td>
             <td class="p-4 text-right">
-                <button onclick="editPatient(${patient.id})" 
-                    class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">
-                    Editar
-                </button>
-                <button onclick="deletePatient(${patient.id})" 
-                    class="text-red-600 hover:text-red-800 font-medium">
-                    Eliminar
-                </button>
+                <div class="flex justify-end gap-2">
+                    ${bedActions}
+                    <button onclick="editPatient(${patient.id})" 
+                        class="text-indigo-600 hover:text-indigo-800 font-medium">
+                        Editar
+                    </button>
+                    <button onclick="deletePatient(${patient.id})" 
+                        class="text-red-600 hover:text-red-800 font-medium">
+                        Eliminar
+                    </button>
+                </div>
             </td>
         `;
         patientsTableBody.appendChild(row);
@@ -127,7 +163,6 @@ function openPatientModal(patient = null) {
     editingPatient = patient ? patient.id : null;
     document.getElementById('patient-modal-title').textContent = patient ? 'Editar Paciente' : 'Agregar Paciente';
     
-    // Mapear campos del backend al frontend (incluyendo apellidos)
     document.getElementById('patient-id').value = patient?.id || '';
     document.getElementById('patient-name').value = patient?.nombre || '';
     document.getElementById('patient-lastname').value = patient?.apellidos || '';
@@ -149,16 +184,14 @@ async function savePatient(e) {
     
     const id = document.getElementById('patient-id').value;
     
-    // Mapear nombres de campos del frontend al backend (DTO)
     const patientData = {
         nombre: document.getElementById('patient-name').value,
-        apellido: document.getElementById('patient-lastname').value,  // Campo agregado
+        apellidos: document.getElementById('patient-lastname').value,
         tipoSangre: document.getElementById('patient-bloodtype').value,
         padecimientos: document.getElementById('patient-ailments').value,
         descripcion: document.getElementById('patient-description').value,
     };
     
-    // Si estamos editando, agregar el ID
     if (id) {
         patientData.id = parseInt(id);
     }
@@ -166,9 +199,6 @@ async function savePatient(e) {
     try {
         const endpoint = id ? '/patient/update' : '/patient/save';
         const method = id ? 'PUT' : 'POST';
-        
-        console.log('Enviando datos:', patientData);
-        console.log('Endpoint:', url + endpoint);
         
         const response = await fetch(url + endpoint, {
             method,
@@ -184,7 +214,6 @@ async function savePatient(e) {
             loadPatients();
         } else {
             const error = await response.json();
-            console.error('Error del servidor:', error);
             showError(error.message || 'Error al guardar paciente');
         }
     } catch (error) {
@@ -205,12 +234,12 @@ async function changePatientStatus(patientId, newStatus) {
         } else {
             const error = await response.json();
             showError(error.message || 'Error al cambiar estatus');
-            loadPatients(); // Recargar para restaurar el valor anterior
+            loadPatients();
         }
     } catch (error) {
         console.error('Error:', error);
         showError('Error de conexión al cambiar estatus');
-        loadPatients(); // Recargar para restaurar el valor anterior
+        loadPatients();
     }
 }
 
@@ -242,7 +271,6 @@ async function editPatient(id) {
         if (response.ok) {
             const data = await response.json();
             const patient = data.data || data;
-            console.log('Paciente cargado:', patient);
             openPatientModal(patient);
         } else {
             showError('Error al cargar datos del paciente');
@@ -250,5 +278,100 @@ async function editPatient(id) {
     } catch (error) {
         console.error('Error:', error);
         showError('Error de conexión al cargar paciente');
+    }
+}
+
+// ==================== FUNCIONES DE ASIGNACIÓN DE CAMA ====================
+
+async function assignBedToPatient(patientId) {
+    assigningPatientId = patientId;
+    
+    // Cargar camas disponibles
+    try {
+        const response = await fetch(url + "/bed/all");
+        
+        if (response.ok) {
+            const data = await response.json();
+            const beds = data.data || data;
+            
+            // Filtrar solo camas libres
+            const availableBeds = beds.filter(bed => bed.status === 'libre' && !bed.paciente);
+            
+            if (availableBeds.length === 0) {
+                showError('No hay camas disponibles en este momento');
+                return;
+            }
+            
+            // Llenar el select con camas disponibles
+            bedSelect.innerHTML = '<option value="">Seleccionar cama...</option>';
+            availableBeds.forEach(bed => {
+                const option = document.createElement('option');
+                option.value = bed.id;
+                option.textContent = `Cama #${bed.id} - ${bed.nombre || 'Sin nombre'}`;
+                bedSelect.appendChild(option);
+            });
+            
+            // Mostrar modal
+            bedAssignModal.classList.remove('hidden');
+        } else {
+            showError('Error al cargar camas disponibles');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión al cargar camas');
+    }
+}
+
+function closeBedAssignModal() {
+    assigningPatientId = null;
+    bedAssignModal.classList.add('hidden');
+    bedSelect.innerHTML = '';
+}
+
+async function confirmAssignBed() {
+    const bedId = bedSelect.value;
+    
+    if (!bedId) {
+        showError('Por favor seleccione una cama');
+        return;
+    }
+    
+    try {
+        const response = await fetch(url + `/patient/${assigningPatientId}/assign-bed/${bedId}`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            showSuccess('Cama asignada exitosamente');
+            closeBedAssignModal();
+            loadPatients();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Error al asignar cama');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión al asignar cama');
+    }
+}
+
+async function unassignBedFromPatient(patientId) {
+    if (!confirm('¿Está seguro de liberar la cama de este paciente?')) return;
+    
+    try {
+        const response = await fetch(url + `/patient/${patientId}/unassign-bed`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            showSuccess('Cama liberada exitosamente');
+            loadPatients();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Error al liberar cama');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión al liberar cama');
     }
 }

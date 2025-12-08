@@ -162,6 +162,26 @@ public class BedService {
         // Validar que el estatus sea válido
         try {
             Bed.BedStatus status = Bed.BedStatus.valueOf(newStatus);
+
+            // VALIDACIÓN: No permitir cambiar a "libre" si tiene paciente asignado
+            if (status == Bed.BedStatus.libre && bed.getPaciente() != null) {
+                return new ResponseEntity<>(
+                        new Message("No se puede cambiar el estado a 'libre' porque la cama tiene un paciente asignado. " +
+                                "Primero debe liberar al paciente usando el botón correspondiente."),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            // VALIDACIÓN: Si la cama está ocupada, solo se puede cambiar a limpieza o mantenimiento
+            // (no a libre directamente)
+            if (bed.getStatus() == Bed.BedStatus.ocupada && status == Bed.BedStatus.libre && bed.getPaciente() != null) {
+                return new ResponseEntity<>(
+                        new Message("No se puede cambiar directamente de 'ocupada' a 'libre' con un paciente asignado. " +
+                                "Use la función de liberar cama primero."),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
             bed.setStatus(status);
             bed.setUpdatedAt(LocalDateTime.now());
 
