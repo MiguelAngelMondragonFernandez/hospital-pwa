@@ -37,5 +37,4 @@ public interface NurseAssignmentRepository extends JpaRepository<NurseAssignment
     // Obtener todas las asignaciones activas
     @Query("SELECT na FROM NurseAssignment na WHERE na.shiftOpen = true")
     List<NurseAssignment> findAllActiveAssignments();
-    
 }
