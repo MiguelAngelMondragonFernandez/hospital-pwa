@@ -53,4 +53,19 @@ public class Service {
         }
     }
 
+    public ResponseEntity<Message> loginQr(UserDto dto) {
+        User user = repository.findByUsername(dto.getUsername());
+
+        if (user == null) {
+            return new ResponseEntity<>(
+                    new Message("User not found", null, true),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+        // QR Login bypasses password check
+        return new ResponseEntity<>(
+                new Message("Login successful", user),
+                HttpStatus.OK);
+    }
+
 }

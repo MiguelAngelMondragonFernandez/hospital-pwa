@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,23 +8,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-6 max-w-4xl">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <button id="btn-back" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 <span class="font-medium">Volver</span>
             </button>
 
-            <button id="btn-refresh" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
+            <button id="btn-refresh"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span class="font-semibold">Actualizar</span>
             </button>
@@ -34,7 +41,8 @@
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
+                        <path
+                            d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
                     </svg>
                 </div>
                 <div>
@@ -53,7 +61,8 @@
         <div id="empty-state" class="hidden bg-white rounded-2xl shadow-lg p-12 text-center">
             <div class="flex flex-col items-center">
                 <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
                 <p class="text-xl font-semibold text-gray-700 mb-2">No hay camas asignadas</p>
                 <p class="text-gray-500">No tienes camas asignadas en este momento</p>
@@ -71,7 +80,7 @@
         });
 
         document.getElementById('btn-refresh').addEventListener('click', () => {
-            loadBeds();
+            loadBeds(true);
         });
 
         // Get status configuration
@@ -109,7 +118,7 @@
         function createBedCard(bed) {
             const config = getStatusConfig(bed.estado || 'verde');
             const hasPatient = bed?.patientName;
-            
+
             return `
                 <div class="bg-white rounded-xl shadow-md border-2 ${config.border} ${config.bg} p-5 hover:shadow-lg transition cursor-pointer" 
                      onclick="viewBedDetail('${bed.Id}')">
@@ -165,12 +174,12 @@
                 console.log(response);
                 if (response.ok) {
                     const responseData = await response.json();
-                    
+
                     if (responseData.error) {
                         alert('❌ ' + responseData.message);
                         return;
                     }
-                    
+
                     localStorage.setItem('currentBed', JSON.stringify(responseData));
                     window.location.href = './patients.html';
                 } else {
@@ -186,7 +195,7 @@
         function transformAssignmentToBed(assignment) {
             const bed = assignment.bed || {};
             const patient = bed.paciente || null;
-            
+
             return {
                 Id: bed.id,
                 estado: patient ? 'verde' : 'verde', // Ajusta según tu lógica de estado
@@ -199,44 +208,85 @@
             };
         }
 
-        async function loadBeds() {
+        async function loadBeds(forceUpdate = false) {
             try {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const nurseId = user.id;
 
                 if (!nurseId) {
                     alert('❌ No se pudo identificar al enfermero');
-                    window.location.href = 'index.html';
+                    window.location.href = '../index.html';
                     return;
                 }
 
-                const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+                const cached = localStorage.getItem(`cached_assignments_${nurseId}`);
 
-                if (response.ok) {
-                    const responseData = await response.json();
-                    
-                    const assignments = responseData.data || [];
-                    
-                    const beds = assignments.map(assignment => transformAssignmentToBed(assignment));
+                // Cache-First / Cache-Only (unless forced)
+                if (cached && !forceUpdate) {
+                    console.log('Using cached data (OnlyCache strategy)');
+                    const cachedData = JSON.parse(cached);
+                    renderBeds(cachedData.data || []);
+                    showOfflineIndicator();
+                    return; // Stop here, don't use network automatically
+                }
 
-                    const container = document.getElementById('beds-container');
-                    const emptyState = document.getElementById('empty-state');
+                // If no cache or forced update, try network
+                try {
+                    const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
 
-                    if (beds.length > 0) {
-                        container.innerHTML = beds.map(bed => createBedCard(bed)).join('');
-                        container.classList.remove('hidden');
-                        emptyState.classList.add('hidden');
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        // Guardar en caché
+                        localStorage.setItem(`cached_assignments_${nurseId}`, JSON.stringify(responseData));
+                        renderBeds(responseData.data || []);
+
+                        // Clear offline indicator if it was shown (optional, but good UX)
+                        const badge = document.getElementById('offline-badge');
+                        if (badge) badge.remove();
                     } else {
+                        throw new Error('Server returned ' + response.status);
+                    }
+                } catch (networkError) {
+                    console.warn('Network error:', networkError);
+                    if (!cached) {
+                        // Only show empty/error if we didn't have cache to show
+                        const container = document.getElementById('beds-container');
+                        const emptyState = document.getElementById('empty-state');
                         container.classList.add('hidden');
                         emptyState.classList.remove('hidden');
                     }
-                } else {
-                    document.getElementById('empty-state').classList.remove('hidden');
-                    document.getElementById('beds-container').classList.add('hidden');
+                    // If we had cache but forceUpdate failed, we keep showing cache (from previous render) but alert?
+                    if (forceUpdate) alert('❌ No se pudo actualizar (Offline)');
                 }
+
             } catch (error) {
                 console.error('Error loading beds:', error);
-                alert('❌ Error al cargar las camas');
+            }
+        }
+
+        function renderBeds(assignments) {
+            const beds = assignments.map(assignment => transformAssignmentToBed(assignment));
+            const container = document.getElementById('beds-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (beds.length > 0) {
+                container.innerHTML = beds.map(bed => createBedCard(bed)).join('');
+                container.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            } else {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        function showOfflineIndicator() {
+            const header = document.querySelector('.bg-white.rounded-2xl.shadow-lg.p-6.mb-6');
+            if (header && !document.getElementById('offline-badge')) {
+                const badge = document.createElement('div');
+                badge.id = 'offline-badge';
+                badge.className = 'mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200';
+                badge.innerHTML = '📡 Modo Sin Conexión - Datos guardados';
+                header.appendChild(badge);
             }
         }
 
@@ -246,4 +296,5 @@
         });
     </script>
 </body>
+
 </html>
