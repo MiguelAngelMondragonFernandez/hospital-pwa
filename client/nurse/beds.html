@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,23 +8,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-6 max-w-4xl">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <button id="btn-back" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 <span class="font-medium">Volver</span>
             </button>
 
-            <button id="btn-refresh" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
+            <button id="btn-refresh"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span class="font-semibold">Actualizar</span>
             </button>
@@ -34,7 +41,8 @@
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
+                        <path
+                            d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
                     </svg>
                 </div>
                 <div>
@@ -53,7 +61,8 @@
         <div id="empty-state" class="hidden bg-white rounded-2xl shadow-lg p-12 text-center">
             <div class="flex flex-col items-center">
                 <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
                 <p class="text-xl font-semibold text-gray-700 mb-2">No hay camas asignadas</p>
                 <p class="text-gray-500">No tienes camas asignadas en este momento</p>
@@ -73,273 +82,272 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8082/api';
-        let autoRefreshInterval;
+    const API_URL = 'http://localhost:8082/api';
+    let autoRefreshInterval;
 
-        // Navigation
-        document.getElementById('btn-back').addEventListener('click', () => {
-            window.location.href = '../nurse.html';
-        });
+    // Navigation
+    document.getElementById('btn-back').addEventListener('click', () => {
+        window.location.href = '../nurse.html';
+    });
 
-        document.getElementById('btn-refresh').addEventListener('click', () => {
-            loadBeds();
-        });
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+        loadBeds(true);
+    });
 
-        // Get status configuration based on bed status
-        function getStatusConfig(bedStatus, hasPatient) {
-            // Si no hay paciente, mostrar estado neutral
-            if (!hasPatient) {
-                return {
-                    bg: 'bg-gray-50',
-                    border: 'border-gray-200',
-                    badge: 'bg-gray-100 text-gray-700',
-                    icon: '⚪',
-                    label: 'Sin paciente',
-                    pulse: ''
-                };
-            }
+    // Status configuration
+    function getStatusConfig(bedStatus, hasPatient) {
 
-            // Configuración por estado de cama
-            const configs = {
-                'ocupada': {
-                    bg: 'bg-green-50',
-                    border: 'border-green-200',
-                    badge: 'bg-green-100 text-green-700',
-                    icon: '🟢',
-                    label: 'Ocupada',
-                    pulse: ''
-                },
-                'libre': {
-                    bg: 'bg-blue-50',
-                    border: 'border-blue-200',
-                    badge: 'bg-blue-100 text-blue-700',
-                    icon: '🔵',
-                    label: 'Libre',
-                    pulse: ''
-                },
-                'limpieza': {
-                    bg: 'bg-yellow-50',
-                    border: 'border-yellow-200',
-                    badge: 'bg-yellow-100 text-yellow-700',
-                    icon: '🟡',
-                    label: 'Limpieza',
-                    pulse: 'animate-pulse'
-                },
-                'mantenimiento': {
-                    bg: 'bg-red-50',
-                    border: 'border-red-200',
-                    badge: 'bg-red-100 text-red-700',
-                    icon: '🔴',
-                    label: 'Mantenimiento',
-                    pulse: 'animate-pulse'
-                }
+        if (!hasPatient) {
+            return {
+                bg: 'bg-gray-50',
+                border: 'border-gray-200',
+                badge: 'bg-gray-100 text-gray-700',
+                icon: '⚪',
+                label: 'Sin paciente',
+                pulse: ''
             };
-            
-            return configs[bedStatus] || configs['ocupada'];
         }
 
-        // Format date to readable string
-        function formatDate(dateString) {
-            if (!dateString) return '--';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-MX', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-        }
-
-        // Format shift time
-        function formatShiftTime(dateString) {
-            if (!dateString) return '--';
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('es-MX', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-        }
-
-        // Create bed card HTML
-        function createBedCard(assignment) {
-            const hasPatient = assignment.patientId !== null;
-            const config = getStatusConfig(assignment.bedStatus, hasPatient);
-            
-            return `
-                <div class="bg-white rounded-xl shadow-md border-2 ${config.border} ${config.bg} p-5 hover:shadow-lg transition cursor-pointer" 
-                     onclick="viewBedDetail(${assignment.bedId})">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
-                                </svg>
-                            </div>
-                            <span class="text-xl font-bold text-gray-800">Cama ${assignment.bedId}</span>
-                        </div>
-                        <span class="${config.badge} px-3 py-1 rounded-full text-xs font-semibold ${config.pulse}">
-                            ${config.icon} ${config.label}
-                        </span>
-                    </div>
-
-                    <!-- Shift Info -->
-                    <div class="mb-3 pb-3 border-b border-gray-200">
-                        <div class="flex items-center justify-between text-xs text-gray-600">
-                            <span>Turno iniciado:</span>
-                            <span class="font-semibold">${formatShiftTime(assignment.shiftStart)}</span>
-                        </div>
-                    </div>
-
-                    <!-- Patient Info -->
-                    ${hasPatient ? `
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="font-semibold text-gray-700">${assignment.patientName}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="text-gray-600">Tipo: ${assignment.patientBloodType || '--'}</span>
-                            </div>
-                            ${assignment.patientAilments ? `
-                                <div class="flex items-start gap-2 mt-2">
-                                    <svg class="w-4 h-4 text-orange-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span class="text-gray-600 text-xs">${assignment.patientAilments}</span>
-                                </div>
-                            ` : ''}
-                            ${assignment.patientAdmissionDate ? `
-                                <div class="flex items-center gap-2 mt-2">
-                                    <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span class="text-gray-500 text-xs">Ingreso: ${formatDate(assignment.patientAdmissionDate)}</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    ` : `
-                        <div class="text-center py-3">
-                            <p class="text-gray-400 text-sm">Sin paciente asignado</p>
-                        </div>
-                    `}
-
-                    <!-- Action hint -->
-                    <div class="mt-4 pt-4 border-t border-gray-200 text-center">
-                        <span class="text-xs text-gray-500">Toca para ver detalles</span>
-                    </div>
-                </div>
-            `;
-        }
-
-        // View bed detail
-        window.viewBedDetail = async (bedId) => {
-            try {
-                const response = await fetch(`${API_URL}/bed/${bedId}/paciente`);
-                
-                if (response.ok) {
-                    const responseData = await response.json();
-                    
-                    if (responseData.error) {
-                        alert('❌ ' + responseData.message);
-                        return;
-                    }
-                    
-                    localStorage.setItem('currentBed', JSON.stringify(responseData));
-                    window.location.href = './patients.html';
-                } else {
-                    alert('❌ Error al cargar información de la cama');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
+        const configs = {
+            'ocupada': {
+                bg: 'bg-green-50',
+                border: 'border-green-200',
+                badge: 'bg-green-100 text-green-700',
+                icon: '🟢',
+                label: 'Ocupada',
+                pulse: ''
+            },
+            'libre': {
+                bg: 'bg-blue-50',
+                border: 'border-blue-200',
+                badge: 'bg-blue-100 text-blue-700',
+                icon: '🔵',
+                label: 'Libre',
+                pulse: ''
+            },
+            'limpieza': {
+                bg: 'bg-yellow-50',
+                border: 'border-yellow-200',
+                badge: 'bg-yellow-100 text-yellow-700',
+                icon: '🟡',
+                label: 'Limpieza',
+                pulse: 'animate-pulse'
+            },
+            'mantenimiento': {
+                bg: 'bg-red-50',
+                border: 'border-red-200',
+                badge: 'bg-red-100 text-red-700',
+                icon: '🔴',
+                label: 'Mantenimiento',
+                pulse: 'animate-pulse'
             }
         };
 
-        // Load beds from API
-        async function loadBeds() {
-            const container = document.getElementById('beds-container');
-            const emptyState = document.getElementById('empty-state');
-            const loadingState = document.getElementById('loading-state');
+        return configs[bedStatus] || configs['ocupada'];
+    }
 
-            try {
-                // Show loading
-                container.classList.add('hidden');
-                emptyState.classList.add('hidden');
-                loadingState.classList.remove('hidden');
+    function formatDate(dateString) {
+        if (!dateString) return '--';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
 
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                const nurseId = user.id;
+    function formatShiftTime(dateString) {
+        if (!dateString) return '--';
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('es-MX', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
 
-                if (!nurseId) {
-                    alert('❌ No se pudo identificar al enfermero');
-                    window.location.href = 'index.html';
-                    return;
-                }
+    // Final version of createBedCard (USANDO ASSIGNMENTS)
+    function createBedCard(assignment) {
+        const hasPatient = assignment.patientId !== null;
+        const config = getStatusConfig(assignment.bedStatus, hasPatient);
 
-                const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+        return `
+            <div class="bg-white rounded-xl shadow-md border-2 ${config.border} ${config.bg} p-5 hover:shadow-lg transition cursor-pointer" 
+                onclick="viewBedDetail(${assignment.bedId})">
 
-                if (response.ok) {
-                    const responseData = await response.json();
-                    
-                    console.log('Response data:', responseData);
-                    
-                    // Extraer los assignments del campo 'data'
-                    const assignments = responseData.data || [];
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-gray-800">Cama ${assignment.bedId}</span>
+                    </div>
+                    <span class="${config.badge} px-3 py-1 rounded-full text-xs font-semibold ${config.pulse}">
+                        ${config.icon} ${config.label}
+                    </span>
+                </div>
 
-                    // Hide loading
-                    loadingState.classList.add('hidden');
+                <div class="mb-3 pb-3 border-b border-gray-200">
+                    <div class="flex items-center justify-between text-xs text-gray-600">
+                        <span>Turno iniciado:</span>
+                        <span class="font-semibold">${formatShiftTime(assignment.shiftStart)}</span>
+                    </div>
+                </div>
 
-                    if (assignments.length > 0) {
-                        container.innerHTML = assignments.map(assignment => createBedCard(assignment)).join('');
-                        container.classList.remove('hidden');
-                        emptyState.classList.add('hidden');
-                    } else {
-                        container.classList.add('hidden');
-                        emptyState.classList.remove('hidden');
-                    }
-                } else {
-                    loadingState.classList.add('hidden');
-                    emptyState.classList.remove('hidden');
-                    container.classList.add('hidden');
-                    console.error('Error en la respuesta del servidor');
-                }
-            } catch (error) {
-                console.error('Error loading beds:', error);
+                ${hasPatient ? `
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-semibold text-gray-700">${assignment.patientName}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-gray-600">Tipo: ${assignment.patientBloodType || '--'}</span>
+                    </div>
+                    ${assignment.patientAilments ? `
+                    <div class="flex items-start gap-2 mt-2">
+                        <svg class="w-4 h-4 text-orange-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-gray-600 text-xs">${assignment.patientAilments}</span>
+                    </div>
+                    ` : ''}
+                    ${assignment.patientAdmissionDate ? `
+                    <div class="flex items-center gap-2 mt-2">
+                        <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-gray-500 text-xs">Ingreso: ${formatDate(assignment.patientAdmissionDate)}</span>
+                    </div>` : ``}
+                </div>
+                ` : `
+                <div class="text-center py-3">
+                    <p class="text-gray-400 text-sm">Sin paciente asignado</p>
+                </div>`}
+
+                <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                    <span class="text-xs text-gray-500">Toca para ver detalles</span>
+                </div>
+            </div>
+        `;
+    }
+
+    window.viewBedDetail = async (bedId) => {
+        try {
+            const response = await fetch(`${API_URL}/bed/${bedId}/paciente`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.error) return alert('❌ ' + data.message);
+
+                localStorage.setItem('currentBed', JSON.stringify(data));
+                window.location.href = './patients.html';
+            } else {
+                alert('❌ Error al cargar información de la cama');
+            }
+        } catch (error) {
+            alert('❌ Error de conexión');
+        }
+    };
+
+    function transformAssignment(a) {
+        return a; // ya viene correcto desde el back
+    }
+
+    async function loadBeds(forceUpdate = false) {
+        const container = document.getElementById('beds-container');
+        const emptyState = document.getElementById('empty-state');
+        const loadingState = document.getElementById('loading-state');
+
+        try {
+            container.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const nurseId = user.id;
+
+            const cached = localStorage.getItem(`cached_assignments_${nurseId}`);
+
+            // cache only unless force update
+            if (cached && !forceUpdate) {
+                const cachedData = JSON.parse(cached);
+                renderBeds(cachedData.data || []);
+                showOfflineIndicator();
                 loadingState.classList.add('hidden');
-                alert('❌ Error al cargar las camas');
+                return;
+            }
+
+            // try network
+            const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+
+            if (response.ok) {
+                const data = await response.json();
+
+                localStorage.setItem(`cached_assignments_${nurseId}`, JSON.stringify(data));
+
+                renderBeds(data.data || []);
+            } else {
+                throw new Error();
+            }
+
+        } catch (err) {
+            if (!cached) {
+                container.classList.add('hidden');
                 emptyState.classList.remove('hidden');
             }
+            alert('❌ No se pudo actualizar (Offline)');
+        } finally {
+            loadingState.classList.add('hidden');
+        }
+    }
+
+    function renderBeds(assignments) {
+        const container = document.getElementById('beds-container');
+        const emptyState = document.getElementById('empty-state');
+
+        if (!assignments || assignments.length === 0) {
+            container.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
         }
 
-        // Auto refresh every 30 seconds
-        function startAutoRefresh() {
-            autoRefreshInterval = setInterval(() => {
-                loadBeds();
-            }, 30000); // 30 segundos
+        container.innerHTML = assignments.map(a => createBedCard(transformAssignment(a))).join('');
+        container.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+    }
+
+    function showOfflineIndicator() {
+        const header = document.querySelector('.bg-white.rounded-2xl.shadow-lg.p-6.mb-6');
+        if (!document.getElementById('offline-badge')) {
+            const badge = document.createElement('div');
+            badge.id = 'offline-badge';
+            badge.className = 'mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200';
+            badge.innerHTML = '📡 Modo Sin Conexión - Datos guardados';
+            header.appendChild(badge);
         }
+    }
 
-        // Stop auto refresh
-        function stopAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-        }
+    function startAutoRefresh() {
+        autoRefreshInterval = setInterval(() => loadBeds(), 30000);
+    }
 
-        // Load on page load
-        window.addEventListener('load', () => {
-            loadBeds();
-            startAutoRefresh();
-        });
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    }
 
-        // Stop auto refresh when leaving page
-        window.addEventListener('beforeunload', () => {
-            stopAutoRefresh();
-        });
-    </script>
+    window.addEventListener('load', () => {
+        loadBeds();
+        startAutoRefresh();
+    });
+
+    window.addEventListener('beforeunload', () => stopAutoRefresh());
+</script>
+
 </body>
+
 </html>

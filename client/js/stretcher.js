@@ -23,65 +23,41 @@ const btnMarkAttended = document.getElementById('btn-mark-attended');
 const statusContainer = document.getElementById('status-container');
 const statusText = document.getElementById('status-text');
 
+
 async function checkActiveRequest() {
     try {
         const response = await fetch(url + "/attention/findAllByStretcherId/" + localStorage.getItem('stretcherId'));
         if (response.ok) {
             const data = await response.json();
-            // Assuming the API returns a list, we check if there's any non-attended one
-            // Or if we need to filter client-side. 
-            // Based on backend changes, findAllByStretcherId returns all. 
-            // We should probably filter for the latest active one or the backend should have given us just the active one.
-            // Let's filter here for now.
             const requests = data.data;
+            // Find the latest active request to show its status
             const activeRequest = requests.find(r => r.status !== 'Atendida');
 
             if (activeRequest) {
-                showActiveState(activeRequest);
+                statusContainer.style.display = 'block';
+                statusText.textContent = activeRequest.status;
             } else {
-                showInactiveState();
+                statusContainer.style.display = 'none';
             }
         } else {
-            showInactiveState();
+            statusContainer.style.display = 'none';
         }
     } catch (error) {
         console.error("Error checking status", error);
     }
 }
 
-function showActiveState(request) {
-    btnRequest.style.display = 'none';
-    btnMarkAttended.style.display = 'block';
-    statusContainer.style.display = 'block';
-    statusText.textContent = request.status;
-    btnMarkAttended.onclick = () => markAsAttended(request.id);
-}
-
-function showInactiveState() {
-    btnRequest.style.display = 'block';
-    btnMarkAttended.style.display = 'none';
-    statusContainer.style.display = 'none';
-}
-
-async function markAsAttended(id) {
-    try {
-        const response = await fetch(url + "/attention/markAsAttended/" + id, {
-            method: 'POST'
-        });
-        const data = await response.json();
-        if (response.ok) {
-            alert(data.message);
-            checkActiveRequest();
-        } else {
-            alert(data.message);
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Error al marcar como atendida");
-    }
-}
+// Removed showActiveState/showInactiveState/markAsAttended as Stretcher shouldn't mark as attended.
 
 btnRequest.addEventListener('click', async () => {
+    // Disable button immediately
+    btnRequest.disabled = true;
+
+    // Re-enable after 5 seconds
+    setTimeout(() => {
+        btnRequest.disabled = false;
+    }, 5000);
+
     const response = await fetch(url + "/attention/save", {
         method: 'POST',
         headers: {

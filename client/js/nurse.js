@@ -51,9 +51,38 @@ function renderTable(requests) {
             <td>${req.stretcherId}</td>
             <td>${req.dateTime}</td>
             <td><span class="badge bg-warning text-dark">${req.status}</span></td>
+            <td>
+                ${req.status !== 'Atendida' ? `<button class="btn-attend btn btn-primary btn-sm" data-id="${req.id}">Atender</button>` : ''}
+            </td>
         `;
         tableBody.appendChild(row);
     });
+
+    // Add event listeners to the new buttons
+    document.querySelectorAll('.btn-attend').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            markAsAttended(id);
+        });
+    });
+}
+
+async function markAsAttended(id) {
+    try {
+        const response = await fetch(url + "/attention/markAsAttended/" + id, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (response.ok) {
+            alert(data.message);
+            loadRequests();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        console.error("Error marking as attended", error);
+        alert("Error al marcar como atendida");
+    }
 }
 
 addEventListener('load', () => {
