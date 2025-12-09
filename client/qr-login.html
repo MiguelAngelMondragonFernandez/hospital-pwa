@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login QR - Hospital (Debug)</title>
+    <title>Login QR - Hospital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
             font-family: 'Inter', sans-serif;
         }
         
-        /* Estilos críticos para mostrar el video */
         #reader {
             width: 100%;
             max-width: 600px;
@@ -53,13 +52,6 @@
             0%, 100% { opacity: 1; }
             50% { opacity: .5; }
         }
-
-        #debug-log {
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-        }
     </style>
 </head>
 
@@ -67,7 +59,7 @@
     <div class="max-w-2xl mx-auto">
         
         <!-- Header -->
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-4">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-blue-600 p-6 text-center">
                 <div class="flex items-center justify-center mb-3">
                     <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,12 +152,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Log de debug (solo para desarrollo) -->
-        <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="font-bold text-sm mb-2">🔍 Log de Debug:</h3>
-            <div id="debug-log" class="bg-gray-50 p-3 rounded border text-xs"></div>
-        </div>
     </div>
 
     <script>
@@ -184,21 +170,11 @@
         const statusMessage = document.getElementById('status-message');
         const processingState = document.getElementById('processing-state');
         const timerDisplay = document.getElementById('timer');
-        const debugLog = document.getElementById('debug-log');
 
         // Botones
         const btnStop = document.getElementById('btn-stop');
         const btnRestart = document.getElementById('btn-restart');
         const btnToggleCamera = document.getElementById('btn-toggle-camera');
-
-        // Debug log
-        function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600';
-            debugLog.innerHTML += `<div class="${color}">[${timestamp}] ${message}</div>`;
-            debugLog.scrollTop = debugLog.scrollHeight;
-            console.log(`[${type.toUpperCase()}]`, message);
-        }
 
         // Mostrar mensaje
         function showMessage(message, type = 'info') {
@@ -244,28 +220,16 @@
 
         // Iniciar cámara
         async function startCamera() {
-            if (isScanning) {
-                log('Ya hay un escaneo en progreso', 'error');
-                return;
-            }
+            if (isScanning) return;
 
             try {
-                log('🎥 Iniciando cámara...');
-                
-                // Mostrar contenedor primero
                 loadingState.classList.add('hidden');
                 stoppedState.classList.add('hidden');
                 readerContainer.classList.remove('hidden');
                 
-                log('✅ Contenedor visible');
-                
-                // Crear instancia
                 html5QrCode = new Html5Qrcode("reader");
-                log('✅ Instancia Html5Qrcode creada');
 
-                // Configuración
                 const qrCodeSuccessCallback = (decodedText) => {
-                    log(`✅ QR detectado: ${decodedText}`, 'success');
                     onScanSuccess(decodedText);
                 };
 
@@ -275,35 +239,18 @@
                 };
 
                 const cameraId = useFrontCamera ? { facingMode: "user" } : { facingMode: "environment" };
-                log(`📷 Intentando con: ${useFrontCamera ? 'Cámara frontal' : 'Cámara trasera'}`);
 
-                // Iniciar
                 await html5QrCode.start(
                     cameraId,
                     config,
                     qrCodeSuccessCallback
                 );
 
-                log('✅ Cámara iniciada exitosamente!', 'success');
                 isScanning = true;
                 hideMessage();
                 startCountdown();
 
-                // Verificar que el video se esté mostrando
-                setTimeout(() => {
-                    const video = document.querySelector('#reader video');
-                    if (video) {
-                        log(`✅ Video encontrado: ${video.videoWidth}x${video.videoHeight}`, 'success');
-                        log(`Video visible: ${video.offsetWidth > 0 ? 'SÍ' : 'NO'}`);
-                    } else {
-                        log('❌ No se encontró elemento video', 'error');
-                    }
-                }, 1000);
-
             } catch (err) {
-                log(`❌ Error: ${err.message}`, 'error');
-                log(`Tipo: ${err.name}`, 'error');
-                
                 loadingState.classList.add('hidden');
                 readerContainer.classList.add('hidden');
                 stoppedState.classList.remove('hidden');
@@ -329,13 +276,12 @@
                 await html5QrCode.stop();
                 await html5QrCode.clear();
                 isScanning = false;
-                log('⏸️ Cámara detenida');
                 
                 readerContainer.classList.add('hidden');
                 stoppedState.classList.remove('hidden');
                 showMessage('⏸️ Cámara pausada', 'info');
             } catch (err) {
-                log(`❌ Error al detener: ${err.message}`, 'error');
+                console.error('Error al detener cámara:', err);
             }
         }
 
@@ -365,8 +311,6 @@
         // Login
         async function loginWithQr(bedId) {
             try {
-                log(`🔐 Intentando login con cama ID: ${bedId}`);
-                
                 const response = await fetch(`${API_URL}/auth/login-qr`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -376,7 +320,6 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    log('✅ Login exitoso!', 'success');
                     processingState.classList.add('hidden');
                     showMessage('✅ ¡Bienvenido! Redirigiendo...', 'success');
 
@@ -391,14 +334,12 @@
                         window.location.href = 'stretcher.html';
                     }, 1500);
                 } else {
-                    log(`❌ Error ${response.status}: ${data.message}`, 'error');
                     processingState.classList.add('hidden');
                     showMessage(`❌ ${data.message}`, 'error');
                     stoppedState.classList.remove('hidden');
                     isProcessing = false;
                 }
             } catch (error) {
-                log(`❌ Error de red: ${error.message}`, 'error');
                 processingState.classList.add('hidden');
                 showMessage('❌ Error de conexión', 'error');
                 stoppedState.classList.remove('hidden');
@@ -427,11 +368,7 @@
 
         // Iniciar
         window.addEventListener('load', () => {
-            log('🚀 Página cargada');
-            setTimeout(() => {
-                log('▶️ Iniciando cámara automáticamente...');
-                startCamera();
-            }, 1000);
+            setTimeout(startCamera, 1000);
         });
 
         window.addEventListener('beforeunload', () => {

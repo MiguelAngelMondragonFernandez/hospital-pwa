@@ -79,7 +79,7 @@ async function markAsAttended(id) {
         const data = await response.json();
         if (response.ok) {
             // Show success message (optional, or just reload)
-            alert(data.message || 'Solicitud atendida');
+            // alert(data.message || 'Solicitud atendida');
             loadRequests();
         } else {
             alert(data.message || 'Error al actualizar');

@@ -26,12 +26,23 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    const notificationTitle = payload.notification.title;
+
+    const notificationTitle = payload.notification ? payload.notification.title : (payload.data ? payload.data.title : 'Notificación');
     const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/firebase-logo.png' // Optional
+        body: payload.notification ? payload.notification.body : (payload.data ? payload.data.body : ''),
+        icon: './img/icons/icon-192x192.png', // Ensure icon path helps 
+        data: payload.data
     };
 
-    self.registration.showNotification(notificationTitle,
-        notificationOptions);
+    // Broadcast to Window (if open)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => {
+            client.postMessage({
+                type: 'BACKGROUND_MSG_RECEIVED',
+                payload: payload
+            });
+        });
+    });
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
