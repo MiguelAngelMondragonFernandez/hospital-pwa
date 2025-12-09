@@ -16,23 +16,24 @@ import java.nio.file.Paths;
 @Service
 public class QrService {
 
+    // Directorio donde se guardan los QR
     @Value("${qr.directory:src/main/resources/static/qr}")
     private String qrDirectory;
 
+    // Dominio base para la URL pública
     @Value("${app.domain:http://localhost:8080}")
     private String appDomain;
 
-    @Value("${app.frontend.url:http://localhost:3000}")
-    private String frontendUrl;
-
+    // Tamaño del QR en píxeles
     private static final int QR_WIDTH = 300;
     private static final int QR_HEIGHT = 300;
 
     /**
      * Genera un código QR para una cama específica
-     * El QR contiene la URL completa de login: https://miapp.com/qr-login?bedId=12
      * @param bedId ID de la cama
      * @return URL pública del archivo QR generado
+     * @throws IOException Si hay error al escribir el archivo
+     * @throws WriterException Si hay error al generar el QR
      */
     public String generateQrForBed(Long bedId) throws IOException, WriterException {
 
@@ -42,8 +43,8 @@ public class QrService {
             Files.createDirectories(directory);
         }
 
-        // Contenido del QR: URL completa con el bedId como parámetro
-        String qrContent = String.format("%s/qr-login?bedId=%d", frontendUrl, bedId);
+        // Contenido del QR: solo el ID de la cama
+        String qrContent = bedId.toString();
 
         // Generar el código QR usando ZXing
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
@@ -55,21 +56,23 @@ public class QrService {
         );
 
         // Ruta del archivo donde se guardará el QR
-        Path qrPath = Paths.get(qrDirectory, "bed_" + bedId + ".png");
+        Path qrPath = Paths.get(qrDirectory, bedId + ".png");
 
         // Escribir la imagen en el archivo
         MatrixToImageWriter.writeToPath(bitMatrix, "PNG", qrPath);
 
         // Retornar la URL pública del QR
-        return String.format("%s/qr/bed_%d.png", appDomain, bedId);
+        return String.format("%s/qr/%d.png", appDomain, bedId);
     }
 
     /**
      * Elimina el archivo QR de una cama
+     * @param bedId ID de la cama
+     * @return true si se eliminó correctamente
      */
     public boolean deleteQrForBed(Long bedId) {
         try {
-            Path qrPath = Paths.get(qrDirectory, "bed_" + bedId + ".png");
+            Path qrPath = Paths.get(qrDirectory, bedId + ".png");
             return Files.deleteIfExists(qrPath);
         } catch (IOException e) {
             return false;
@@ -78,18 +81,22 @@ public class QrService {
 
     /**
      * Verifica si existe un QR para una cama
+     * @param bedId ID de la cama
+     * @return true si el archivo existe
      */
     public boolean qrExists(Long bedId) {
-        Path qrPath = Paths.get(qrDirectory, "bed_" + bedId + ".png");
+        Path qrPath = Paths.get(qrDirectory, bedId + ".png");
         return Files.exists(qrPath);
     }
 
     /**
      * Obtiene la URL del QR si existe
+     * @param bedId ID de la cama
+     * @return URL del QR o null si no existe
      */
     public String getQrUrl(Long bedId) {
         if (qrExists(bedId)) {
-            return String.format("%s/qr/bed_%d.png", appDomain, bedId);
+            return String.format("%s/qr/%d.png", appDomain, bedId);
         }
         return null;
     }
