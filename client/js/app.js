@@ -17,6 +17,13 @@ const formLogin = document.getElementById('form-login');
 const passwordInput = document.getElementById('password');
 const passwordContainer = document.getElementById('password-container');
 const btnSubmit = document.getElementById('btn-submit');
+const btnScanLogin = document.getElementById('btn-scan-login');
+
+if (btnScanLogin) {
+    btnScanLogin.addEventListener('click', () => {
+        window.location.href = 'scan_login.html';
+    });
+}
 
 formLogin.addEventListener('submit', async (event) => {
     event.preventDefault();

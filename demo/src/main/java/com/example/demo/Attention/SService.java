@@ -17,6 +17,9 @@ import lombok.Data;
 public class SService {
 
     private final IRespository repository;
+    private final com.example.demo.Notification.Service.NotificationService notificationService;
+    private final com.example.demo.Bed.Entity.BedRepository bedRepository; // We need this to find the bed and
+                                                                           // assignments
 
     public ResponseEntity<Message> findAllUnattended() {
         List<Bean> list = repository.findAllByStatusNot("Atendida");
@@ -35,12 +38,53 @@ public class SService {
     }
 
     public ResponseEntity<Message> save(Dto dto) {
-        Bean bean = new Bean();
-        bean.setDateTime(dto.getDateTime());
-        bean.setStatus(dto.getStatus());
-        bean.setStretcherId(dto.getStretcherId());
-        Bean bean2 = repository.save(bean);
-        return new ResponseEntity<>(new Message("Datos guardados", bean2), HttpStatus.OK);
+        Long stretcherId = dto.getStretcherId();
+
+        // Check if there is already a PENDING request for this stretcher
+        List<Bean> existing = repository.findAllByStretcherId(stretcherId);
+        Bean pendingRequest = existing.stream()
+                .filter(b -> "Pendiente".equals(b.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        Bean resultBean;
+
+        if (pendingRequest != null) {
+            // Already pending: Just update timestamp but don't create new record
+            pendingRequest.setDateTime(dto.getDateTime());
+            resultBean = repository.save(pendingRequest);
+            // We proceed to trigger notification again
+        } else {
+            // New request
+            Bean bean = new Bean();
+            bean.setDateTime(dto.getDateTime());
+            bean.setStatus(dto.getStatus());
+            bean.setStretcherId(stretcherId);
+            resultBean = repository.save(bean);
+        }
+
+        // TRIGGER NOTIFICATION (Always trigger if requested again)
+        try {
+            com.example.demo.Bed.Entity.Bed bed = bedRepository.findById(stretcherId).orElse(null);
+
+            if (bed != null && bed.getNurseAssignments() != null) {
+                // Find active assignment
+                for (com.example.demo.Nurse.NurseAssignment assignment : bed.getNurseAssignments()) {
+                    if (Boolean.TRUE.equals(assignment.getShiftOpen())) {
+                        com.example.demo.User.Entity.User nurse = assignment.getNurse();
+                        if (nurse != null) {
+                            notificationService.sendToUser(nurse, "Nueva Solicitud",
+                                    "El paciente de la cama " + stretcherId + " solicita ayuda.");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Don't fail the request if notification fails
+        }
+
+        return new ResponseEntity<>(new Message("Datos guardados", resultBean), HttpStatus.OK);
     }
 
     // Buscamos por idStretcher
