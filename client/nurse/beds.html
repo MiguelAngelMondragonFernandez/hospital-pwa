@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Camas Asignadas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        
+        <div class="flex items-center justify-between mb-6">
+            <button id="btn-back" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span class="font-medium">Volver</span>
+            </button>
+
+            <button id="btn-refresh"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="font-semibold">Actualizar</span>
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-300 transition-colors duration-300"></div>
+                <div class="flex flex-col">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider">Estado</span>
+                    <span id="status-text" class="text-sm font-bold text-gray-500">Inactivo</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button id="btn-start-shift" class="hidden flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="font-medium text-sm">Iniciar</span>
+                </button>
+
+                <button id="btn-end-shift" class="hidden flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-lg hover:bg-orange-200 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    <span class="font-medium text-sm">Terminar</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Mis Camas Asignadas</h1>
+                    <p class="text-gray-500 text-sm">Gestiona tus pacientes activos</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="beds-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            </div>
+
+        <div id="empty-state" class="hidden bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div class="flex flex-col items-center">
+                <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p class="text-xl font-semibold text-gray-700 mb-2">No hay camas asignadas</p>
+                <p class="text-gray-500 mb-4">Escanea un código QR o asígnate una cama para comenzar.</p>
+                <a href="./beds.html" class="text-indigo-600 font-semibold hover:text-indigo-800">Ir al panel de camas</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8082/api';
+        
+        // Elementos DOM del Turno
+        const btnStartShift = document.getElementById('btn-start-shift');
+        const btnEndShift = document.getElementById('btn-end-shift');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+
+        // ==================== LÓGICA DE TURNOS ====================
+
+        function updateShiftUI(isActive) {
+            if (isActive) {
+                // Estado: Turno Activo
+                btnStartShift.classList.add('hidden');
+                btnEndShift.classList.remove('hidden');
+                
+                statusIndicator.classList.remove('bg-gray-300');
+                statusIndicator.classList.add('bg-green-500', 'animate-pulse');
+                statusText.textContent = "Turno Activo";
+                statusText.classList.replace('text-gray-500', 'text-green-700');
+            } else {
+                // Estado: Turno Inactivo
+                btnStartShift.classList.remove('hidden');
+                btnEndShift.classList.add('hidden');
+                
+                statusIndicator.classList.remove('bg-green-500', 'animate-pulse');
+                statusIndicator.classList.add('bg-gray-300');
+                statusText.textContent = "Sin Turno";
+                statusText.classList.replace('text-green-700', 'text-gray-500');
+            }
+        }
+
+        async function checkShiftStatus() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
+
+                if (!nurseId) return;
+
+                // Consultamos asignaciones activas para determinar el estado del turno
+                const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const assignments = data.data || data;
+                    // Si hay asignaciones, el turno se considera activo
+                    const isActive = assignments && assignments.length > 0;
+                    updateShiftUI(isActive);
+                }
+            } catch (error) {
+                console.error("Error checking shift status:", error);
+            }
+        }
+
+        async function handleEndShift() {
+            if (!confirm("¿Desea terminar su turno y cerrar todas las asignaciones?")) return;
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
+
+                const response = await fetch(`${API_URL}/nurse/${nurseId}/end-all-shifts`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    alert("Turno finalizado correctamente.");
+                    updateShiftUI(false);
+                    loadBeds(true); // Recargar la lista de camas (se vaciará)
+                } else {
+                    const data = await response.json();
+                    alert("Error: " + (data.message || "No se pudo terminar el turno"));
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error de conexión");
+            }
+        }
+
+        // Listener para botones de turno
+        btnStartShift.addEventListener('click', () => {
+            alert("Para iniciar turno, por favor escanee el código QR de una cama o asísgnese un paciente desde el panel principal.");
+        });
+
+        btnEndShift.addEventListener('click', handleEndShift);
+
+
+        // ==================== LÓGICA DE CAMAS Y NAVEGACIÓN ====================
+
+        // Navigation
+        document.getElementById('btn-back').addEventListener('click', () => {
+            // Ajusta según tu estructura de carpetas (ej: '../index.html' o './dashboard.html')
+            window.history.back(); 
+        });
+
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            loadBeds(true);
+            checkShiftStatus();
+        });
+
+        function getStatusConfig(status) {
+            const configs = {
+                'verde': { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', icon: '🟢', label: 'Normal', pulse: '' },
+                'amarillo': { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-100 text-yellow-700', icon: '🟡', label: 'Precaución', pulse: 'animate-pulse' },
+                'rojo': { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', icon: '🔴', label: 'Urgente', pulse: 'animate-pulse' }
+            };
+            return configs[status] || configs['verde'];
+        }
+
+        function createBedCard(bed) {
+            const config = getStatusConfig(bed.estado || 'verde');
+            
+            return `
+                <div class="bg-white rounded-xl shadow-md border-2 ${config.border} ${config.bg} p-5 hover:shadow-lg transition cursor-pointer" 
+                     onclick="viewBedDetail('${bed.Id}')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xl font-bold text-gray-800">Cama ${bed.Id}</span>
+                        </div>
+                        <span class="${config.badge} px-3 py-1 rounded-full text-xs font-semibold ${config.pulse}">
+                            ${config.icon} ${config.label}
+                        </span>
+                    </div>
+
+                    ${bed?.patientName ? `
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="font-semibold text-gray-700">${bed.patientName}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-gray-600">${bed.bloodType || '--'}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-center py-3">
+                            <p class="text-gray-400 text-sm italic">Sin paciente asignado</p>
+                        </div>
+                    `}
+
+                    <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                        <span class="text-xs text-gray-500 font-medium">Toca para ver detalles</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.viewBedDetail = async (bedId) => {
+            try {
+                // Obtener detalles del paciente para esa cama
+                const response = await fetch(`${API_URL}/bed/${bedId}/paciente`);
+                
+                if (response.ok) {
+                    const responseData = await response.json();
+                    
+                    if (responseData.error) {
+                        alert('❌ ' + responseData.message);
+                        return;
+                    }
+
+                    // Guardamos la info en local para la siguiente vista y redirigimos
+                    localStorage.setItem('currentBed', JSON.stringify(responseData));
+                    window.location.href = './patients.html'; // Asegúrate de que este archivo exista
+                } else {
+                    alert('❌ Error al cargar información de la cama');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        };
+
+        // Mapea la respuesta del backend a la estructura visual de la tarjeta
+     function transformAssignmentToBed(assignment) {
+            const bed = assignment.bed || {};
+            
+            
+            const patient = bed.paciente || bed.patient || null;
+
+            let fullName = null;
+            if (patient) {
+                const nombre = patient.nombre || patient.firstName || '';
+                const apellidos = patient.apellidos || patient.lastName || '';
+                fullName = `${nombre} ${apellidos}`.trim();
+            }
+
+            return {
+                Id: bed.id, 
+                estado: 'verde', 
+                patientName: fullName, 
+                bloodType: patient ? (patient.grupoSanguineo || patient.bloodType || 'ND') : null,
+                bedStatus: bed.status,
+                assignmentId: assignment.id
+            };
+        }
+
+        async function loadBeds(forceUpdate = false) {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
+
+                if (!nurseId) {
+                    alert('❌ No se pudo identificar al enfermero. Por favor inicie sesión.');
+                    window.location.href = '../index.html'; // Redirigir al login
+                    return;
+                }
+
+                const cached = localStorage.getItem(`cached_assignments_${nurseId}`);
+
+                // Estrategia: Cache primero (offline first)
+                if (cached && !forceUpdate) {
+                    console.log('Cargando desde caché local...');
+                    const cachedData = JSON.parse(cached);
+                    renderBeds(cachedData.data || []);
+                    showOfflineIndicator();
+                    
+                    // Intentamos verificar estado del turno en segundo plano
+                    checkShiftStatus(); 
+                    return; 
+                }
+
+                // Intento de red
+                try {
+                    // Endpoint: obtener asignaciones ACTIVAS del enfermero
+                    const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        
+                        // Guardar en caché
+                        localStorage.setItem(`cached_assignments_${nurseId}`, JSON.stringify(responseData));
+                        
+                        renderBeds(responseData.data || []);
+                        
+                        // Actualizar UI del turno basado en si hay datos
+                        const isActive = responseData.data && responseData.data.length > 0;
+                        updateShiftUI(isActive);
+
+                        // Quitar indicador offline si existe
+                        const badge = document.getElementById('offline-badge');
+                        if (badge) badge.remove();
+                    } else {
+                        throw new Error('Respuesta del servidor: ' + response.status);
+                    }
+                } catch (networkError) {
+                    console.warn('Error de red:', networkError);
+                    if (!cached) {
+                        // Si falla red y no hay caché, mostrar estado vacío o error
+                        document.getElementById('beds-container').classList.add('hidden');
+                        document.getElementById('empty-state').classList.remove('hidden');
+                    }
+                    if (forceUpdate) alert('❌ Modo Offline: No se pudo actualizar.');
+                }
+
+            } catch (error) {
+                console.error('Error general cargando camas:', error);
+            }
+        }
+
+        function renderBeds(assignments) {
+            const container = document.getElementById('beds-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Transformamos datos del backend a formato de tarjeta
+            const beds = assignments.map(assignment => transformAssignmentToBed(assignment));
+
+            if (beds.length > 0) {
+                container.innerHTML = beds.map(bed => createBedCard(bed)).join('');
+                container.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            } else {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        function showOfflineIndicator() {
+            const header = document.querySelector('.bg-white.rounded-2xl.shadow-lg.p-6.mb-6');
+            if (header && !document.getElementById('offline-badge')) {
+                const badge = document.createElement('div');
+                badge.id = 'offline-badge';
+                badge.className = 'mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200';
+                badge.innerHTML = '📡 Modo Sin Conexión - Datos guardados';
+                header.appendChild(badge);
+            }
+        }
+
+        // Inicialización al cargar la página
+        window.addEventListener('load', () => {
+            loadBeds();
+            checkShiftStatus();
+        });
+    </script>
+</body>
+
+</html>
