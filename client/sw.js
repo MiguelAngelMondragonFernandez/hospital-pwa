@@ -8,6 +8,9 @@ const ASSETS_TO_CACHE = [
     './island.html',
     './nurse.html',
     './stretcher.html',
+    './manifest.json',
+    './images/icons/icon-192.png',
+    './images/icons/icon-512.png',
 
     // Vistas HTML
     './island/beds.html',
