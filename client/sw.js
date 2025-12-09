@@ -8,14 +8,14 @@ const ASSETS_TO_CACHE = [
     './island.html',
     './nurse.html',
     './stretcher.html',
-    
+
     // Vistas HTML
     './island/beds.html',
     './island/nurses.html',
     './island/patients.html',
     './nurse/beds.html',
     './nurse/patients.html',
-    
+
     // Scripts JS
     './js/app.js',
     './js/config.js',
@@ -25,9 +25,9 @@ const ASSETS_TO_CACHE = [
     './js/island/nurses.js',
     './js/island/patients.js',
     './js/island/utils.js',
-    
+
     // Librerías Externas (CDN)
-    'https://cdn.tailwindcss.com',
+    // 'https://cdn.tailwindcss.com', // REMOVED: CORS Error
     'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
 ];
@@ -71,6 +71,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
+    // ESTRATEGIA 1: Network First (Para la API - Datos frescos)
+    // Buscamos si la URL contiene "/api/"
+    if (event.request.url.includes('/api/')) {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    // Si la respuesta es válida, la clonamos al caché y la devolvemos
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(DYNAMIC_CACHE).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                            trimCache(DYNAMIC_CACHE, 50);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Si falla la red (offline), intentamos devolver lo que haya en caché
+                    console.log('[SW] API offline/fallo, buscando en caché:', event.request.url);
+                    return caches.match(event.request);
+                })
+        );
+        return; // Importante salir aquí para no ejecutar la estrategia 2
+    }
+
+    // ESTRATEGIA 2: Cache First (Para archivos estáticos - Velocidad)
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             // A. Si está en caché, lo devolvemos
@@ -86,13 +112,11 @@ self.addEventListener('fetch', (event) => {
 
                 // Guardamos en caché dinámico lo nuevo
                 const responseToCache = networkResponse.clone();
-                
+
                 if (event.request.url.startsWith('http')) {
                     caches.open(DYNAMIC_CACHE).then((cache) => {
                         cache.put(event.request, responseToCache);
-                        
-                        // [NUEVO] Limpiamos el caché si crece mucho (Límite: 50 items)
-                        trimCache(DYNAMIC_CACHE, 50); 
+                        trimCache(DYNAMIC_CACHE, 50);
                     });
                 }
 
@@ -113,7 +137,7 @@ function trimCache(cacheName, maxItems) {
                 cache.delete(keys[0])
                     .then(() => {
                         // Llamada recursiva hasta llegar al límite
-                        trimCache(cacheName, maxItems); 
+                        trimCache(cacheName, maxItems);
                     });
             }
         });
