@@ -7,7 +7,7 @@ function logout() {
     localStorage.removeItem('userToken');
     sessionStorage.clear();
     // Redirigir a la página de login
-    window.location.href = './login.html';
+    window.location.href = './index.html';
 }
 const tableBody = document.getElementById('requests-table-body');
 const noRequestsMsg = document.getElementById('no-requests-msg');
