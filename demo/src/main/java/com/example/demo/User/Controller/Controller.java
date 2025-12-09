@@ -24,9 +24,4 @@ public class Controller {
     public ResponseEntity<Message> login(@RequestBody UserDto dto) {
         return service.login(dto);
     }
-
-    @PostMapping("/login-qr")
-    public ResponseEntity<Message> loginQr(@RequestBody UserDto dto) {
-        return service.loginQr(dto);
-    }
 }
