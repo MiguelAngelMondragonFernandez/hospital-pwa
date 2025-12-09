@@ -2,6 +2,7 @@ package com.example.demo.Nurse;
 
 import com.example.demo.Bed.Entity.Bed;
 import com.example.demo.Bed.Entity.BedRepository;
+import com.example.demo.Patient.Entity.Patient;
 import com.example.demo.User.Entity.User;
 import com.example.demo.User.Service.Repository;
 import com.example.demo.utils.Message;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Data
@@ -135,8 +137,13 @@ public class NurseService {
 
         List<NurseAssignment> assignments = assignmentRepository.findActiveAssignmentsByNurseId(nurseId);
 
+        // Convertir a DTO con información del paciente
+        List<ActiveAssignmentDTO> assignmentDTOs = assignments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
         return new ResponseEntity<>(
-                new Message("Asignaciones activas encontradas", assignments),
+                new Message("Asignaciones activas encontradas", assignmentDTOs),
                 HttpStatus.OK
         );
     }
@@ -318,5 +325,35 @@ public class NurseService {
                 new Message("Asignaciones activas encontradas", activeAssignments),
                 HttpStatus.OK
         );
+    }
+    private ActiveAssignmentDTO convertToDTO(NurseAssignment assignment) {
+        ActiveAssignmentDTO dto = new ActiveAssignmentDTO();
+
+        // Información de la asignación
+        dto.setAssignmentId(assignment.getId());
+        dto.setShiftOpen(assignment.getShiftOpen());
+        dto.setShiftStart(assignment.getShiftStart());
+        dto.setShiftEnd(assignment.getShiftEnd());
+
+        // Información del enfermero
+        dto.setNurseId(assignment.getNurse().getId());
+
+        // Información de la cama
+        Bed bed = assignment.getBed();
+        dto.setBedId(bed.getId());
+        dto.setBedStatus(bed.getStatus().name());
+
+        // Información del paciente (si existe)
+        Patient patient = bed.getPaciente();
+        if (patient != null) {
+            dto.setPatientId(patient.getId());
+            dto.setPatientName(patient.getNombre() + " " + patient.getApellidos());
+            dto.setPatientBloodType(patient.getTipoSangre());
+            dto.setPatientAilments(patient.getPadecimientos());
+            dto.setPatientDescription(patient.getDescripcion());
+            dto.setPatientAdmissionDate(patient.getFechaIngreso());
+        }
+
+        return dto;
     }
 }
