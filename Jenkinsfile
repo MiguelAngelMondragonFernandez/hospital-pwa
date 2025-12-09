@@ -17,7 +17,7 @@ pipeline {
         stage('Deleting old images') {
             steps{
                 sh '''
-                    IMAGES=$(docker images --filter "label=com.docker.compose.project=gmu" -q)
+                    IMAGES=$(docker images --filter "label=com.docker.compose.project=hospital-pwa" -q)
                     if [ -n "$IMAGES" ]; then
                         docker rmi -f $IMAGES
                     fi
@@ -34,7 +34,7 @@ pipeline {
         stage('Building new images') {
             steps {
                 sh '''
-                    docker compose -p gmu build --no-cache
+                    docker compose -p hospital-pwa build --no-cache
                 '''
             }
         }
@@ -42,7 +42,7 @@ pipeline {
         stage('Deploying containers') {
             steps {
                 sh '''
-                    docker compose -p gmu up -d
+                    docker compose -p hospital-pwa up -d
                 '''
             }
         }
