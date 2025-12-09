@@ -9,7 +9,7 @@ pipeline {
         stage('Stopping services') {
             steps {
                 sh '''
-                    docker compose -p gmu down || true
+                    docker compose -p hospital-pwa down || true
                 '''
             }
         }
