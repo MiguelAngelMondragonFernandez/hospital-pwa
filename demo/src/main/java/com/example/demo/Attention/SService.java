@@ -11,9 +11,12 @@ import com.example.demo.utils.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @Data
 @AllArgsConstructor
+@Slf4j
 public class SService {
 
     private final IRespository repository;
@@ -26,6 +29,7 @@ public class SService {
         if (list.isEmpty()) {
             return new ResponseEntity<>(new Message("No hay solicitudes pendientes"), HttpStatus.OK);
         }
+        list.sort((a, b) -> b.getId().compareTo(a.getId()));
         return new ResponseEntity<>(new Message("Solicitudes encontradas", list), HttpStatus.OK);
     }
 
@@ -34,41 +38,61 @@ public class SService {
         if (list.isEmpty()) {
             return new ResponseEntity<>(new Message("No hay registros"), HttpStatus.OK);
         }
+        list.sort((a, b) -> b.getId().compareTo(a.getId()));
         return new ResponseEntity<>(new Message("Registros encontrados", list), HttpStatus.OK);
     }
 
+    @jakarta.transaction.Transactional
     public ResponseEntity<Message> save(Dto dto) {
-        Long stretcherId = dto.getStretcherId();
-
-        // Always create a new request to keep history, as requested
-        Bean bean = new Bean();
-        bean.setDateTime(dto.getDateTime());
-        bean.setStatus(dto.getStatus());
-        bean.setStretcherId(stretcherId);
-        Bean resultBean = repository.save(bean);
-
-        // TRIGGER NOTIFICATION (Always trigger if requested again)
         try {
-            com.example.demo.Bed.Entity.Bed bed = bedRepository.findById(stretcherId).orElse(null);
+            Long stretcherId = dto.getStretcherId();
 
-            if (bed != null && bed.getNurseAssignments() != null) {
-                // Find active assignment
-                for (com.example.demo.Nurse.NurseAssignment assignment : bed.getNurseAssignments()) {
-                    if (Boolean.TRUE.equals(assignment.getShiftOpen())) {
-                        com.example.demo.User.Entity.User nurse = assignment.getNurse();
-                        if (nurse != null) {
-                            notificationService.sendToUser(nurse, "Nueva Solicitud",
-                                    "El paciente de la cama " + stretcherId + " solicita ayuda.");
+            // Always create a new request to keep history, as requested
+            Bean bean = new Bean();
+            bean.setDateTime(dto.getDateTime());
+            bean.setStatus(dto.getStatus());
+            bean.setStretcherId(stretcherId);
+            Bean resultBean = repository.save(bean);
+
+            // TRIGGER NOTIFICATION (Always trigger if requested again)
+            try {
+                log.info("Intento de notificación para camilla: " + stretcherId);
+                com.example.demo.Bed.Entity.Bed bed = bedRepository.findById(stretcherId).orElse(null);
+
+                if (bed != null) {
+                    if (bed.getNurseAssignments() != null) {
+                        // Find active assignment
+                        boolean notified = false;
+                        for (com.example.demo.Nurse.NurseAssignment assignment : bed.getNurseAssignments()) {
+                            if (Boolean.TRUE.equals(assignment.getShiftOpen())) {
+                                com.example.demo.User.Entity.User nurse = assignment.getNurse();
+                                if (nurse != null) {
+                                    log.info("Enviando notificación a enfermero: " + nurse.getUsername());
+                                    notificationService.sendToUser(nurse, "Nueva Solicitud",
+                                            "El paciente de la cama " + stretcherId + " solicita ayuda.");
+                                    notified = true;
+                                }
+                            }
                         }
+                        if (!notified)
+                            log.warn("No se encontró enfermero con turno abierto para esta cama.");
+                    } else {
+                        log.warn("La cama no tiene asignaciones de enfermeros (lista nula).");
                     }
+                } else {
+                    log.warn("Cama no encontrada con ID: " + stretcherId);
                 }
+            } catch (Exception e) {
+                log.error("Error al enviar notificación: ", e);
+                // Don't fail the request if notification fails
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Don't fail the request if notification fails
-        }
 
-        return new ResponseEntity<>(new Message("Datos guardados", resultBean), HttpStatus.OK);
+            return new ResponseEntity<>(new Message("Datos guardados", resultBean), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error fatal al guardar solicitud: ", e);
+            return new ResponseEntity<>(new Message("Error interno: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Buscamos por idStretcher
@@ -77,6 +101,7 @@ public class SService {
         if (list.isEmpty()) {
             return new ResponseEntity<>(new Message("No se encontraron datos"), HttpStatus.NOT_FOUND);
         }
+        list.sort((a, b) -> b.getId().compareTo(a.getId()));
         return new ResponseEntity<>(new Message("Datos encontrados", list), HttpStatus.OK);
     }
 

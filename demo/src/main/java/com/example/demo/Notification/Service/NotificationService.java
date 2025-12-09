@@ -77,6 +77,9 @@ public class NotificationService {
                             .setTitle(title)
                             .setBody(body)
                             .build())
+                    .putData("title", title)
+                    .putData("body", body)
+                    .putData("click_action", "FLUTTER_NOTIFICATION_CLICK") // Compatibility
                     .build();
 
             String response = FirebaseMessaging.getInstance().send(message);

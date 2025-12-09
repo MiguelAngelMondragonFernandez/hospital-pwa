@@ -1,0 +1,53 @@
+services:
+  database:
+    image: mysql:8
+    container_name: hospital-pwa-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: reopeko98
+      MYSQL_DATABASE: hospital-pwa-db
+    ports:
+      - "3306:3306"
+    networks:
+      - gmu-net
+    volumes:
+      - gmu-data:/var/lib/mysql
+
+  frontend:
+    container_name: hospital-pwa-frontend
+    restart: always
+    build:
+      context: ./client
+    ports:
+      - "80:80"
+    networks:
+      - gmu-net
+    depends_on:
+      - backend
+
+  backend:
+    container_name: hospital-pwa-backend
+    restart: always
+    build:
+      context: ./demo
+    environment:
+      SERVER_PORT: 8080
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: hospital-pwa-db
+      DB_USER: root
+      DB_PASS: reopeko98
+      JWT_SECRET: R01VLVBSMFkzQzctU1Q0TVAtMGM1MmZiZDgtMGYxYS00MzliLTkyYWYtMjc4NDYzNzAwNzI4
+    ports:
+      - "8081:8080"
+    networks:
+      - gmu-net
+    depends_on:
+      - database
+
+networks:
+  gmu-net:
+
+
+volumes:
+  gmu-data:

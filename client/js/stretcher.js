@@ -74,7 +74,7 @@ btnRequest.addEventListener('click', async () => {
         // alert(data.message); // Quieter UX
         checkActiveRequest();
     } else {
-        alert(data.message);
+        alert(data.message || data.error || 'Error desconocido del servidor');
     }
 });
 
