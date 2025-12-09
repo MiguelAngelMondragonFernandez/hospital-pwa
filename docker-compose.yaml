@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   database:
     image: mysql:8
@@ -13,23 +15,11 @@ services:
     volumes:
       - gmu-data:/var/lib/mysql
 
-  frontend:
-    container_name: hospital-pwa-frontend
-    restart: always
-    build:
-      context: ./client
-    ports:
-      - "80:80"
-    networks:
-      - gmu-net
-    depends_on:
-      - backend
-
   backend:
-    container_name: hospital-pwa-backend
-    restart: always
     build:
       context: ./demo
+    container_name: hospital-pwa-backend
+    restart: always
     environment:
       SERVER_PORT: 8080
       DB_HOST: database
@@ -40,14 +30,25 @@ services:
       JWT_SECRET: R01VLVBSMFkzQzctU1Q0TVAtMGM1MmZiZDgtMGYxYS00MzliLTkyYWYtMjc4NDYzNzAwNzI4
     ports:
       - "8081:8080"
-    networks:
-      - gmu-net
     depends_on:
       - database
+    networks:
+      - gmu-net
+
+  frontend:
+    build:
+      context: ./client
+    container_name: hospital-pwa-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - gmu-net
 
 networks:
   gmu-net:
-
 
 volumes:
   gmu-data:
