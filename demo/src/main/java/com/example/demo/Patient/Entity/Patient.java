@@ -35,6 +35,9 @@ public class Patient {
     @Column(name = "description", columnDefinition = "TEXT")
     private String descripcion;
 
+    @Column(unique = true, nullable = false)
+    private String username;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "ENUM('activo','inactivo','alta')", nullable = false)
     private EstatusPaciente estatus;

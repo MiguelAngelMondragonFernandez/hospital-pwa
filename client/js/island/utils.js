@@ -33,5 +33,5 @@ export function getBedStatusClass(status) {
 
 export function logout() {
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
 }

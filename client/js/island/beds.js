@@ -8,7 +8,6 @@ const btnAddBed = document.getElementById('btn-add-bed');
 const btnRefreshBeds = document.getElementById('btn-refresh-beds');
 const btnLogout = document.getElementById('btn-logout');
 const bedModal = document.getElementById('bed-modal');
-const btnCloseBedModal = document.getElementById('btn-close-bed-modal');
 const formBed = document.getElementById('form-bed');
 
 let editingBed = null;
@@ -98,7 +97,7 @@ function renderBedsTable(beds) {
             <td class="p-4 text-right">
                 <div class="flex justify-end gap-2">
                     ${hasQR ? `
-                        <button data-action="view-qr" data-qr-url="${bed.qrUrl}"
+                        <button data-action="view-qr" data-qr-url="${bed.qrUrl}" data-bed-id="${bed.id}"
                             class="text-blue-600 hover:text-blue-800 font-medium" 
                             title="Ver QR">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,16 +109,9 @@ function renderBedsTable(beds) {
                         <button data-action="generate-qr" data-bed-id="${bed.id}"
                             class="text-green-600 hover:text-green-800 font-medium" 
                             title="Generar QR">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
+                            Generar QR
                         </button>
                     `}
-                    <button data-action="edit" data-bed-id="${bed.id}"
-                        class="text-indigo-600 hover:text-indigo-800 font-medium">
-                        Editar
-                    </button>
                     <button data-action="delete" data-bed-id="${bed.id}"
                         class="text-red-600 hover:text-red-800 font-medium">
                         Eliminar
@@ -170,62 +162,56 @@ function updateBedStatusClass(selectElement) {
     selectElement.className = 'px-3 py-1 rounded text-xs font-semibold border-none cursor-pointer ' + newClass;
 }
 
-// ==================== MODAL CAMA ====================
+// ==================== AGREGAR CAMA DIRECTA ====================
 
-function openBedModal(bed = null) {
-    editingBed = bed ? bed.id : null;
-    document.getElementById('bed-modal-title').textContent = bed ? 'Editar Cama' : 'Agregar Cama';
+async function addBedDirectly() {
+    const confirmAdd = confirm('¿Desea agregar una nueva cama?');
     
-    document.getElementById('bed-id').value = bed?.id || '';
-    document.getElementById('bed-number').value = bed?.nombre || '';
-    
-    bedModal.classList.remove('hidden');
-}
-
-function closeBedModal() {
-    editingBed = null;
-    bedModal.classList.add('hidden');
-    formBed.reset();
-}
-
-async function saveBed(e) {
-    e.preventDefault();
-    
-    const id = document.getElementById('bed-id').value;
-    
-    const bedData = {
-        nombre: document.getElementById('bed-number').value,
-    };
-    
-    if (id) {
-        bedData.id = parseInt(id);
-    }
+    if (!confirmAdd) return;
     
     try {
-        const endpoint = id ? '/bed/update' : '/bed/save';
-        const method = id ? 'PUT' : 'POST';
+        // Obtener el siguiente número de cama disponible
+        const response = await fetch(url + "/bed/all");
+        let nextNumber = 1;
         
-        const response = await fetch(url + endpoint, {
-            method,
+        if (response.ok) {
+            const data = await response.json();
+            const beds = data.data || data;
+            
+            if (beds && beds.length > 0) {
+                // Encontrar el número más alto y sumar 1
+                const maxId = Math.max(...beds.map(bed => bed.id || 0));
+                nextNumber = maxId + 1;
+            }
+        }
+        
+        const bedData = {
+            nombre: `Cama ${nextNumber}`
+        };
+        
+        const saveResponse = await fetch(url + '/bed/save', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(bedData)
         });
         
-        if (response.ok) {
-            showSuccess(id ? 'Cama actualizada exitosamente' : 'Cama registrada exitosamente');
-            closeBedModal();
+        if (saveResponse.ok) {
+            showSuccess('Cama agregada exitosamente');
             loadBeds();
         } else {
-            const error = await response.json();
-            showError(error.message || 'Error al guardar cama');
+            const error = await saveResponse.json();
+            showError(error.message || 'Error al agregar cama');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('Error de conexión al guardar cama');
+        showError('Error de conexión al agregar cama');
     }
 }
+
+// ==================== MODAL CAMA (SOLO PARA EDITAR) ====================
+
 
 // ==================== CRUD CAMAS ====================
 
@@ -250,22 +236,6 @@ async function deleteBed(id) {
     }
 }
 
-async function editBed(id) {
-    try {
-        const response = await fetch(url + `/bed/${id}`);
-        
-        if (response.ok) {
-            const data = await response.json();
-            const bed = data.data || data;
-            openBedModal(bed);
-        } else {
-            showError('Error al cargar datos de la cama');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Error de conexión al cargar cama');
-    }
-}
 
 async function changeBedStatus(bedId, newStatus, selectElement) {
     try {
@@ -279,10 +249,7 @@ async function changeBedStatus(bedId, newStatus, selectElement) {
             showSuccess(`Estatus cambiado a: ${getStatusText(newStatus)}`);
             updateBedStatusClass(selectElement);
         } else {
-            // Mostrar el mensaje de error específico del backend
             showError(data.message || 'Error al cambiar estatus');
-            
-            // Recargar la tabla para restaurar el valor anterior
             loadBeds();
         }
     } catch (error) {
@@ -305,13 +272,12 @@ async function generateQR(bedId) {
         if (response.ok) {
             const data = await response.json();
             showSuccess('Código QR generado exitosamente');
-            
-            // Abrir el QR en una nueva pestaña
+            console.log(data);
             if (data.data && data.data.qrUrl) {
-                window.open(data.data.qrUrl, '_blank');
+                showQRModal(data.data.qrUrl, data.data.id);
             }
             
-            loadBeds(); // Recargar para mostrar el botón de ver QR
+            loadBeds();
         } else {
             const error = await response.json();
             showError(error.message || 'Error al generar QR');
@@ -322,6 +288,58 @@ async function generateQR(bedId) {
     }
 }
 
+function showQRModal(qrUrl, bedId) {
+    console.log(bedId);
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm';
+    modal.innerHTML = `
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">
+                    Código QR - Cama #${bedId}
+                </h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="flex flex-col items-center">
+                <div class="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4">
+                    <img src="${qrUrl}" alt="Código QR" class="w-64 h-64 object-contain" />
+                </div>
+                
+                <p class="text-sm text-gray-600 text-center mb-4">
+                    Escanea este código QR para ver la información del paciente
+                </p>
+                
+                <div class="flex gap-3 w-full">
+                    <a href="${qrUrl}" download="qr-cama-${bedId}.png"
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-center shadow transition">
+                        Descargar QR
+                    </a>
+                    <button class="close-modal flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-bold shadow transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
 async function viewPatientInfo(bedId) {
     try {
         const response = await fetch(url + `/bed/${bedId}/paciente`);
@@ -330,7 +348,6 @@ async function viewPatientInfo(bedId) {
             const data = await response.json();
             const info = data.data;
             
-            // Crear modal personalizado para mostrar info del paciente
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm';
             modal.innerHTML = `
@@ -401,12 +418,10 @@ async function viewPatientInfo(bedId) {
             
             document.body.appendChild(modal);
             
-            // Event listeners para cerrar el modal
             modal.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', () => modal.remove());
             });
             
-            // Cerrar al hacer clic fuera del modal
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
@@ -425,14 +440,11 @@ async function viewPatientInfo(bedId) {
 // ==================== EVENT LISTENERS ====================
 
 function initializeEventListeners() {
-    // Botones principales
-    btnAddBed.addEventListener('click', () => openBedModal());
+    // Botón de agregar cama (ahora agrega directamente)
+    btnAddBed.addEventListener('click', addBedDirectly);
     btnRefreshBeds.addEventListener('click', loadBeds);
     btnLogout.addEventListener('click', logout);
     
-    // Modal de cama
-    btnCloseBedModal.addEventListener('click', closeBedModal);
-    formBed.addEventListener('submit', saveBed);
     
     // Event delegation para la tabla
     bedsTableBody.addEventListener('click', (e) => {
@@ -441,11 +453,8 @@ function initializeEventListeners() {
         
         const action = button.dataset.action;
         const bedId = parseInt(button.dataset.bedId);
-        
+
         switch(action) {
-            case 'edit':
-                editBed(bedId);
-                break;
             case 'delete':
                 deleteBed(bedId);
                 break;
@@ -453,7 +462,7 @@ function initializeEventListeners() {
                 generateQR(bedId);
                 break;
             case 'view-qr':
-                window.open(button.dataset.qrUrl, '_blank');
+                showQRModal(button.dataset.qrUrl,bedId);
                 break;
             case 'view-patient':
                 viewPatientInfo(bedId);
@@ -474,12 +483,7 @@ function initializeEventListeners() {
 
 addEventListener('load', () => {
     console.log('🚀 Iniciando Panel de Isla - Camas...');
-    
-    // Inicializar event listeners
     initializeEventListeners();
-    
-    // Cargar datos iniciales
     loadBeds();
-    
     console.log('✅ Panel de Camas inicializado correctamente');
 });

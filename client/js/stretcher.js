@@ -15,6 +15,12 @@ const btnLogout = document.getElementById('btn-logout');
 btnLogout.addEventListener('click', () => {
     localStorage.removeItem('user');
     localStorage.removeItem('stretcherId');
+    localStorage.removeItem('patientId');
+    localStorage.removeItem('bedId');
+    localStorage.removeItem('patientName');
+    localStorage.removeItem('role');
+    localStorage.removeItem('token');
+
     window.location.href = 'index.html';
 });
 
@@ -26,7 +32,7 @@ const statusText = document.getElementById('status-text');
 
 async function checkActiveRequest() {
     try {
-        const response = await fetch(url + "/attention/findAllByStretcherId/" + localStorage.getItem('stretcherId'));
+        const response = await fetch(url + "/attention/findAllByStretcherId/" + localStorage.getItem('bedId'));
         if (response.ok) {
             const data = await response.json();
             const requests = data.data;
@@ -74,7 +80,7 @@ btnRequest.addEventListener('click', async () => {
         // alert(data.message); // Quieter UX
         checkActiveRequest();
     } else {
-        alert(data.message || data.error || 'Error desconocido del servidor');
+        alert(data.message);
     }
 });
 
