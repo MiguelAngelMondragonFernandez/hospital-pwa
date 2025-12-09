@@ -1,4 +1,3 @@
-
 import { url } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
@@ -121,6 +120,26 @@ async function subscribeToPush() {
             registration = await navigator.serviceWorker.register('/client/firebase-messaging-sw.js');
         }
 
+        // Wait for Service Worker to be active to avoid "no active Service Worker" error
+        if (!registration.active && (registration.installing || registration.waiting)) {
+            const sw = registration.installing || registration.waiting;
+            if (sw) {
+                await new Promise((resolve) => {
+                    if (sw.state === 'activated') {
+                        resolve(null);
+                        return;
+                    }
+                    const listener = () => {
+                        if (sw.state === 'activated') {
+                            sw.removeEventListener('statechange', listener);
+                            resolve(null);
+                        }
+                    };
+                    sw.addEventListener('statechange', listener);
+                });
+            }
+        }
+
         console.log("Requesting permission..."); // DEBUG
         const permission = await Notification.requestPermission();
         console.log("Permission status:", permission); // DEBUG
@@ -160,7 +179,6 @@ async function subscribeToPush() {
     }
 }
 
-// Handle foreground messages
 onMessage(messaging, (payload) => {
     console.log('Message received. ', payload);
     const { title, body } = payload.notification;
@@ -171,7 +189,6 @@ onMessage(messaging, (payload) => {
 
 addEventListener('load', () => {
     loadRequests();
-    // Optional: Auto refresh every 10 seconds
     setInterval(loadRequests, 10000);
     subscribeToPush();
 });
