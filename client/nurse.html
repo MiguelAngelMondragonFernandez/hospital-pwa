@@ -54,9 +54,30 @@
                 <p class="text-gray-500 text-sm">Apunta la cámara al código QR de la cama</p>
             </div>
 
-            <!-- QR Reader -->
-            <div id="qr-reader" class="rounded-lg overflow-hidden border-4 border-blue-200"></div>
+            <!-- QR Reader Container -->
+            <div id="qr-reader-container" class="hidden">
+                <div id="qr-reader" class="rounded-lg overflow-hidden border-4 border-blue-200"></div>
+                <button id="btn-stop-scan"
+                    class="mt-2 w-full text-red-500 hover:text-red-700 font-medium text-sm py-2 border border-red-200 rounded-lg">
+                    Cerrar Cámara
+                </button>
+            </div>
 
+            <!-- Start Scan Button Container -->
+            <div id="start-scan-container" class="text-center py-4">
+                <button id="btn-start-scan"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition flex items-center gap-2 mx-auto">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Activar Cámara
+                </button>
+            </div>
+
+            <!-- Scanner Status -->
             <!-- Scanner Status -->
             <div id="scanner-status" class="mt-4 text-center text-sm text-gray-600"></div>
         </div>
@@ -80,6 +101,9 @@
         </div>
     </div>
 
+    <script type="module" src="js/config.js"></script>
+    <script type="module" src="js/nurse.js"></script>
+
     <script>
         const API_URL = 'http://localhost:8082/api';
         let html5QrCode;
@@ -102,6 +126,9 @@
 
         // Initialize QR Scanner
         function startScanner() {
+            document.getElementById('start-scan-container').classList.add('hidden');
+            document.getElementById('qr-reader-container').classList.remove('hidden');
+
             html5QrCode = new Html5Qrcode("qr-reader");
 
             const config = {
@@ -119,15 +146,30 @@
                 document.getElementById('scanner-status').innerHTML =
                     '<span class="text-red-500">❌ Error al iniciar la cámara</span>';
                 console.error("Error starting scanner:", err);
+                stopScanner();
             });
 
             document.getElementById('scanner-status').innerHTML =
                 '<span class="text-blue-600">📷 Cámara lista - Escanea un código QR</span>';
         }
 
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('qr-reader-container').classList.add('hidden');
+                    document.getElementById('start-scan-container').classList.remove('hidden');
+                    document.getElementById('scanner-status').innerHTML = '';
+                    html5QrCode.clear();
+                }).catch(err => console.error(err));
+            } else {
+                document.getElementById('qr-reader-container').classList.add('hidden');
+                document.getElementById('start-scan-container').classList.remove('hidden');
+            }
+        }
+
         async function onScanSuccess(decodedText) {
             // Stop scanner
-            html5QrCode.stop();
+            stopScanner();
             showLoader(true);
 
             const bedId = decodedText;
@@ -194,7 +236,7 @@
                 console.error('Scan error:', error);
                 showLoader(false);
                 alert('❌ No se encontró información (Ni en caché, ni en servidor)');
-                setTimeout(() => startScanner(), 1000);
+                // Don't auto restart scanner
             }
         }
 
@@ -202,10 +244,9 @@
             // Ignore scan errors
         }
 
-        // Start scanner on load
-        window.addEventListener('load', () => {
-            startScanner();
-        });
+        // Button Listeners
+        document.getElementById('btn-start-scan').addEventListener('click', startScanner);
+        document.getElementById('btn-stop-scan').addEventListener('click', stopScanner);
 
         // Stop scanner on page unload
         window.addEventListener('beforeunload', () => {

@@ -1,20 +1,43 @@
+
 import { url } from "./config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
 
 const tableBody = document.getElementById('requests-table-body');
 const noRequestsMsg = document.getElementById('no-requests-msg');
 const btnRefresh = document.getElementById('btn-refresh');
 const btnLogout = document.getElementById('btn-logout');
 
-btnLogout.addEventListener('click', () => {
-    localStorage.removeItem('user');
-    window.location.href = 'index.html';
-});
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyCZgu1E_xrpOIaaSPExLzehHb9PwL1nNhA",
+    authDomain: "authfluttertwitterclone.firebaseapp.com",
+    projectId: "authfluttertwitterclone",
+    storageBucket: "authfluttertwitterclone.firebasestorage.app",
+    messagingSenderId: "485188841768",
+    appId: "1:485188841768:web:eae53681a3930b7a4fa01d"
+};
 
-btnRefresh.addEventListener('click', () => {
-    loadRequests();
-});
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+        localStorage.removeItem('user');
+        window.location.href = 'index.html';
+    });
+}
+
+if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+        loadRequests();
+    });
+}
 
 async function loadRequests() {
+    if (!tableBody) return; // Guard
+
     try {
         const response = await fetch(url + "/attention/findAllUnattended");
         if (response.ok) {
@@ -23,26 +46,26 @@ async function loadRequests() {
 
             if (requests && requests.length > 0) {
                 renderTable(requests);
-                noRequestsMsg.style.display = 'none';
-                tableBody.parentElement.style.display = 'table';
+                if (noRequestsMsg) noRequestsMsg.style.display = 'none';
+                if (tableBody.parentElement) tableBody.parentElement.style.display = 'table';
             } else {
                 tableBody.innerHTML = '';
-                noRequestsMsg.style.display = 'block';
-                tableBody.parentElement.style.display = 'none';
+                if (noRequestsMsg) noRequestsMsg.style.display = 'block';
+                if (tableBody.parentElement) tableBody.parentElement.style.display = 'none';
             }
         } else {
-            // If 404 or other error, likely no requests or error
             tableBody.innerHTML = '';
-            noRequestsMsg.style.display = 'block';
-            tableBody.parentElement.style.display = 'none';
+            if (noRequestsMsg) noRequestsMsg.style.display = 'block';
+            if (tableBody.parentElement) tableBody.parentElement.style.display = 'none';
         }
     } catch (error) {
         console.error("Error loading requests", error);
-        alert("Error al cargar solicitudes");
     }
 }
 
 function renderTable(requests) {
+    if (!tableBody) return;
+
     tableBody.innerHTML = '';
     requests.forEach(req => {
         const row = document.createElement('tr');
@@ -58,7 +81,6 @@ function renderTable(requests) {
         tableBody.appendChild(row);
     });
 
-    // Add event listeners to the new buttons
     document.querySelectorAll('.btn-attend').forEach(button => {
         button.addEventListener('click', (e) => {
             const id = e.target.getAttribute('data-id');
@@ -85,8 +107,71 @@ async function markAsAttended(id) {
     }
 }
 
+async function subscribeToPush() {
+    console.log("Attempting to subscribe to push..."); // DEBUG
+    try {
+        // 1. Register Service Worker Manually to specify path
+        let registration;
+        try {
+            registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+            console.log("Service Worker registered with scope:", registration.scope);
+        } catch (swError) {
+            console.error("Service Worker registration failed:", swError);
+            console.log("Trying absolute path /client/firebase-messaging-sw.js as fallback...");
+            registration = await navigator.serviceWorker.register('/client/firebase-messaging-sw.js');
+        }
+
+        console.log("Requesting permission..."); // DEBUG
+        const permission = await Notification.requestPermission();
+        console.log("Permission status:", permission); // DEBUG
+
+        if (permission === 'granted') {
+            console.log("Getting token..."); // DEBUG
+            const token = await getToken(messaging, { serviceWorkerRegistration: registration });
+
+            if (token) {
+                console.log("FCM Token:", token);
+                // Send token to backend
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    await fetch(url + '/notifications/subscribe', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            token: token,
+                            userId: user.id
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log("Token sent to backend for user:", user.id);
+                } else {
+                    console.warn("No user found in localStorage to link token.");
+                }
+            } else {
+                console.log('No registration token available. Request permission to generate one.');
+            }
+        } else {
+            console.log('Unable to get permission to notify.');
+        }
+    } catch (err) {
+        console.error('An error occurred while retrieving token. ', err);
+    }
+}
+
+// Handle foreground messages
+onMessage(messaging, (payload) => {
+    console.log('Message received. ', payload);
+    const { title, body } = payload.notification;
+    // Show toast or alert
+    alert(`${title}: ${body}`);
+    loadRequests(); // Reload table
+});
+
 addEventListener('load', () => {
     loadRequests();
     // Optional: Auto refresh every 10 seconds
     setInterval(loadRequests, 10000);
+    subscribeToPush();
 });

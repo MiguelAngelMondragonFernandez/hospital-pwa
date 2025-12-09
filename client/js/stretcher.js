@@ -71,7 +71,7 @@ btnRequest.addEventListener('click', async () => {
     });
     const data = await response.json();
     if (response.ok) {
-        alert(data.message);
+        // alert(data.message); // Quieter UX
         checkActiveRequest();
     } else {
         alert(data.message);

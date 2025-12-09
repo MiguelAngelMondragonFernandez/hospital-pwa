@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notificaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/config.js" type="module"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-4 text-center">Simulador de Paciente</h1>
+        <p class="mb-4 text-gray-600 text-sm">Usa esto para probar las notificaciones sin escanear QR.</p>
+
+        <div class="mb-4">
+            <label for="bedId" class="block text-gray-700 text-sm font-bold mb-2">ID de Cama (Stretcher ID):</label>
+            <input type="number" id="bedId"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="Ej: 1">
+            <p class="text-xs text-gray-500 mt-1">Asegúrate que esta cama tenga un enfermero asignado.</p>
+        </div>
+
+        <button id="btn-simulate"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mb-4">
+            📢 Solicitar Enfermero
+        </button>
+
+        <div id="result" class="hidden p-4 rounded text-sm"></div>
+    </div>
+
+    <script type="module">
+        import { url } from "./js/config.js";
+
+        document.getElementById('btn-simulate').addEventListener('click', async () => {
+            const bedId = document.getElementById('bedId').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!bedId) {
+                alert("Ingresa un ID de cama");
+                return;
+            }
+
+            resultDiv.className = "hidden p-4 rounded text-sm";
+
+            try {
+                const response = await fetch(url + "/attention/save", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        dateTime: new Date().toLocaleString(),
+                        status: 'Pendiente',
+                        stretcherId: bedId,
+                    })
+                });
+
+                const data = await response.json();
+
+                resultDiv.classList.remove('hidden');
+                if (response.ok) {
+                    resultDiv.classList.add('bg-green-100', 'text-green-700');
+                    resultDiv.textContent = `✅ Éxito: ${data.message}`;
+                } else {
+                    resultDiv.classList.add('bg-red-100', 'text-red-700');
+                    resultDiv.textContent = `❌ Error: ${data.message}`;
+                }
+
+            } catch (error) {
+                console.error(error);
+                resultDiv.classList.remove('hidden');
+                resultDiv.classList.add('bg-red-100', 'text-red-700');
+                resultDiv.textContent = `❌ Error de conexión`;
+            }
+        });
+    </script>
+</body>
+
+</html>
