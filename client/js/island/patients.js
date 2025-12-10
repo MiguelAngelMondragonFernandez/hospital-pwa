@@ -1,5 +1,6 @@
 import { url } from '../config.js';
 import { showSuccess, showError, logout } from './utils.js';
+import { writeData } from '../idb-helper.js';
 
 // DOM Elements
 const patientsTableBody = document.getElementById('patients-table-body');
@@ -24,42 +25,43 @@ let assigningPatientId = null;
 async function loadPatients() {
     try {
         const response = await fetch(url + "/patient/all");
-        
+
         if (response.ok) {
             const data = await response.json();
             const patients = data.data || data;
             console.log('Pacientes cargados:', patients);
-            
+
             if (patients && patients.length > 0) {
                 renderPatientsTable(patients);
-                noPatientsMsg.style.display = 'none';
+                if (noPatientsMsg) noPatientsMsg.style.display = 'none';
             } else {
-                patientsTableBody.innerHTML = '';
-                noPatientsMsg.style.display = 'block';
+                if (patientsTableBody) patientsTableBody.innerHTML = '';
+                if (noPatientsMsg) noPatientsMsg.style.display = 'block';
             }
         } else {
             console.error('Error en respuesta:', response.status);
-            patientsTableBody.innerHTML = '';
-            noPatientsMsg.style.display = 'block';
+            if (patientsTableBody) patientsTableBody.innerHTML = '';
+            if (noPatientsMsg) noPatientsMsg.style.display = 'block';
         }
     } catch (error) {
         console.error("Error loading patients:", error);
         showError('Error al cargar pacientes');
-        patientsTableBody.innerHTML = '';
-        noPatientsMsg.style.display = 'block';
+        if (patientsTableBody) patientsTableBody.innerHTML = '';
+        if (noPatientsMsg) noPatientsMsg.style.display = 'block';
     }
 }
 
 function renderPatientsTable(patients) {
+    if (!patientsTableBody) return;
     patientsTableBody.innerHTML = '';
-    
+
     patients.forEach(patient => {
         const statusClass = getStatusClass(patient.estatus);
-        
+
         // Obtener información de la cama
         let bedInfo = 'Sin cama';
         let bedActions = '';
-        
+
         if (patient.cama) {
             bedInfo = `
                 <span class="inline-flex items-center gap-1 text-indigo-600 font-medium">
@@ -93,7 +95,7 @@ function renderPatientsTable(patients) {
                 </button>
             `;
         }
-        
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="p-4 font-medium">#${patient.id}</td>
@@ -134,7 +136,7 @@ function renderPatientsTable(patients) {
 // ==================== UTILIDADES ====================
 
 function getStatusClass(status) {
-    switch(status) {
+    switch (status) {
         case 'activo':
             return 'bg-green-100 text-green-800';
         case 'inactivo':
@@ -147,7 +149,7 @@ function getStatusClass(status) {
 }
 
 function getStatusText(status) {
-    switch(status) {
+    switch (status) {
         case 'activo':
             return 'Activo';
         case 'inactivo':
@@ -164,14 +166,14 @@ function getStatusText(status) {
 function openPatientModal(patient = null) {
     editingPatient = patient ? patient.id : null;
     document.getElementById('patient-modal-title').textContent = patient ? 'Editar Paciente' : 'Agregar Paciente';
-    
+
     document.getElementById('patient-id').value = patient?.id || '';
     document.getElementById('patient-name').value = patient?.nombre || '';
     document.getElementById('patient-lastname').value = patient?.apellidos || '';
     document.getElementById('patient-bloodtype').value = patient?.tipoSangre || '';
     document.getElementById('patient-ailments').value = patient?.padecimientos || '';
     document.getElementById('patient-description').value = patient?.descripcion || '';
-    
+
     // Mostrar/ocultar el campo de estatus según si es edición o creación
     const statusContainer = document.getElementById('patient-status-container');
     if (patient) {
@@ -182,7 +184,7 @@ function openPatientModal(patient = null) {
         // Modo creación: ocultar el select de estatus
         statusContainer.style.display = 'none';
     }
-    
+
     patientModal.classList.remove('hidden');
 }
 
@@ -194,9 +196,9 @@ function closePatientModal() {
 
 async function savePatient(e) {
     e.preventDefault();
-    
+
     const id = document.getElementById('patient-id').value;
-    
+
     const patientData = {
         nombre: document.getElementById('patient-name').value,
         apellidos: document.getElementById('patient-lastname').value,
@@ -204,7 +206,7 @@ async function savePatient(e) {
         padecimientos: document.getElementById('patient-ailments').value,
         descripcion: document.getElementById('patient-description').value
     };
-    
+
     // Solo agregar estatus si estamos editando
     if (id) {
         patientData.id = parseInt(id);
@@ -213,30 +215,71 @@ async function savePatient(e) {
         // Para nuevos pacientes, usar 'activo' por defecto
         patientData.estatus = 'activo';
     }
-    
+
+    // Definir endpoint y método
+    const endpoint = id ? '/patient/update' : '/patient/save';
+    const method = id ? 'PUT' : 'POST';
+    const fullUrl = url + endpoint;
+
+    // Función auxiliar para guardar en Offline
+    async function handleOfflineSave() {
+        try {
+            const syncData = {
+                url: fullUrl,
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: patientData
+            };
+
+            await writeData('sync-posts', syncData);
+
+            // Registrar Tarea de Sincronización
+            const swRegistration = await navigator.serviceWorker.ready;
+            if (swRegistration.sync) {
+                await swRegistration.sync.register('sync-patients');
+                showSuccess('Guardado MODO OFFLINE. Se sincronizará al volver la conexión.');
+                closePatientModal();
+            } else {
+                showError('Tu navegador no soporta Background Sync, pero se guardó localmente.');
+            }
+        } catch (err) {
+            console.error("Error saving offline:", err);
+            showError("Error al guardar en modo offline");
+        }
+    }
+
+    // 1. CHEQUEO OFFLINE EXPLÍCITO
+    if (!navigator.onLine) {
+        await handleOfflineSave();
+        return;
+    }
+
+    // 2. INTENTO ONLINE
     try {
-        const endpoint = id ? '/patient/update' : '/patient/save';
-        const method = id ? 'PUT' : 'POST';
-        
-        const response = await fetch(url + endpoint, {
+        const response = await fetch(fullUrl, {
             method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(patientData)
         });
-        
+
         if (response.ok) {
             showSuccess(id ? 'Paciente actualizado exitosamente' : 'Paciente registrado exitosamente');
             closePatientModal();
             loadPatients();
         } else {
-            const error = await response.json();
-            showError(error.message || 'Error al guardar paciente');
+            // Si el servidor responde 503 (nuestro SW offline) o falla
+            if (response.status === 503) {
+                console.warn("Recibido 503 (Offline SW), intentando guardar offline...");
+                await handleOfflineSave();
+            } else {
+                const error = await response.json();
+                showError(error.message || 'Error al guardar paciente');
+            }
         }
     } catch (error) {
-        console.error('Error:', error);
-        showError('Error de conexión al guardar paciente');
+        console.error('Error de red al guardar:', error);
+        // Si falla el fetch por error de red (y no es un error de lógica)
+        await handleOfflineSave();
     }
 }
 
@@ -247,7 +290,7 @@ async function changePatientStatus(patientId, newStatus) {
         const response = await fetch(url + `/patient/${patientId}/change-status/${newStatus}`, {
             method: 'PUT'
         });
-        
+
         if (response.ok) {
             showSuccess(`Estatus cambiado a: ${getStatusText(newStatus)}`);
             loadPatients();
@@ -265,12 +308,12 @@ async function changePatientStatus(patientId, newStatus) {
 
 async function deletePatient(id) {
     if (!confirm('¿Está seguro de eliminar este paciente?')) return;
-    
+
     try {
         const response = await fetch(url + `/patient/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showSuccess('Paciente eliminado exitosamente');
             loadPatients();
@@ -287,7 +330,7 @@ async function deletePatient(id) {
 async function editPatient(id) {
     try {
         const response = await fetch(url + `/patient/${id}`);
-        
+
         if (response.ok) {
             const data = await response.json();
             const patient = data.data || data;
@@ -305,21 +348,21 @@ async function editPatient(id) {
 
 async function assignBedToPatient(patientId) {
     assigningPatientId = patientId;
-    
+
     try {
         const response = await fetch(url + "/bed/all");
-        
+
         if (response.ok) {
             const data = await response.json();
             const beds = data.data || data;
-            
+
             const availableBeds = beds.filter(bed => bed.status === 'libre' && !bed.paciente);
-            
+
             if (availableBeds.length === 0) {
                 showError('No hay camas disponibles en este momento');
                 return;
             }
-            
+
             bedSelect.innerHTML = '<option value="">Seleccionar cama...</option>';
             availableBeds.forEach(bed => {
                 const option = document.createElement('option');
@@ -327,7 +370,7 @@ async function assignBedToPatient(patientId) {
                 option.textContent = `Cama #${bed.id} - ${bed.nombre || 'Sin nombre'}`;
                 bedSelect.appendChild(option);
             });
-            
+
             bedAssignModal.classList.remove('hidden');
         } else {
             showError('Error al cargar camas disponibles');
@@ -346,17 +389,17 @@ function closeBedAssignModal() {
 
 async function confirmAssignBed() {
     const bedId = bedSelect.value;
-    
+
     if (!bedId) {
         showError('Por favor seleccione una cama');
         return;
     }
-    
+
     try {
         const response = await fetch(url + `/bed/${bedId}/asignar-paciente/${assigningPatientId}`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             showSuccess('Cama asignada exitosamente');
             closeBedAssignModal();
@@ -373,12 +416,12 @@ async function confirmAssignBed() {
 
 async function unassignBedFromPatient(patientId) {
     if (!confirm('¿Está seguro de liberar la cama de este paciente?')) return;
-    
+
     try {
         const response = await fetch(url + `/patient/${patientId}/unassign-bed`, {
             method: 'PUT'
         });
-        
+
         if (response.ok) {
             showSuccess('Cama liberada exitosamente');
             loadPatients();
@@ -395,45 +438,47 @@ async function unassignBedFromPatient(patientId) {
 // ==================== EVENT LISTENERS ====================
 
 function initializeEventListeners() {
-    btnAddPatient.addEventListener('click', () => openPatientModal());
-    btnRefreshPatients.addEventListener('click', loadPatients);
-    btnLogout.addEventListener('click', logout);
-    
-    btnClosePatientModal.addEventListener('click', closePatientModal);
-    formPatient.addEventListener('submit', savePatient);
-    
-    btnCloseBedAssignModal.addEventListener('click', closeBedAssignModal);
-    btnConfirmAssignBed.addEventListener('click', confirmAssignBed);
-    
-    patientsTableBody.addEventListener('click', (e) => {
-        const button = e.target.closest('[data-action]');
-        if (!button) return;
-        
-        const action = button.dataset.action;
-        const patientId = parseInt(button.dataset.patientId);
-        
-        switch(action) {
-            case 'edit':
-                editPatient(patientId);
-                break;
-            case 'delete':
-                deletePatient(patientId);
-                break;
-            case 'assign-bed':
-                assignBedToPatient(patientId);
-                break;
-            case 'unassign-bed':
-                unassignBedFromPatient(patientId);
-                break;
-        }
-    });
-    
-    patientsTableBody.addEventListener('change', (e) => {
-        if (e.target.dataset.action === 'change-status') {
-            const patientId = parseInt(e.target.dataset.patientId);
-            changePatientStatus(patientId, e.target.value);
-        }
-    });
+    if (btnAddPatient) btnAddPatient.addEventListener('click', () => openPatientModal());
+    if (btnRefreshPatients) btnRefreshPatients.addEventListener('click', loadPatients);
+    if (btnLogout) btnLogout.addEventListener('click', logout);
+
+    if (btnClosePatientModal) btnClosePatientModal.addEventListener('click', closePatientModal);
+    if (formPatient) formPatient.addEventListener('submit', savePatient);
+
+    if (btnCloseBedAssignModal) btnCloseBedAssignModal.addEventListener('click', closeBedAssignModal);
+    if (btnConfirmAssignBed) btnConfirmAssignBed.addEventListener('click', confirmAssignBed);
+
+    if (patientsTableBody) {
+        patientsTableBody.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-action]');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const patientId = parseInt(button.dataset.patientId);
+
+            switch (action) {
+                case 'edit':
+                    editPatient(patientId);
+                    break;
+                case 'delete':
+                    deletePatient(patientId);
+                    break;
+                case 'assign-bed':
+                    assignBedToPatient(patientId);
+                    break;
+                case 'unassign-bed':
+                    unassignBedFromPatient(patientId);
+                    break;
+            }
+        });
+
+        patientsTableBody.addEventListener('change', (e) => {
+            if (e.target.dataset.action === 'change-status') {
+                const patientId = parseInt(e.target.dataset.patientId);
+                changePatientStatus(patientId, e.target.value);
+            }
+        });
+    }
 }
 
 // ==================== INICIALIZACIÓN ====================

@@ -49,7 +49,7 @@ public class PatientService {
         return new ResponseEntity<>(new Message("Paciente encontrado", patient), HttpStatus.OK);
     }
 
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> save(Patient patient) {
         // Validaciones
         if (patient.getNombre() == null || patient.getNombre().isEmpty()) {
@@ -65,11 +65,13 @@ public class PatientService {
         }
 
         if (patient.getApellidos().length() > 150) {
-            return new ResponseEntity<>(new Message("Los apellidos exceden los 150 caracteres"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Message("Los apellidos exceden los 150 caracteres"),
+                    HttpStatus.BAD_REQUEST);
         }
 
         if (patient.getTipoSangre() != null && patient.getTipoSangre().length() > 10) {
-            return new ResponseEntity<>(new Message("El tipo de sangre excede los 10 caracteres"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Message("El tipo de sangre excede los 10 caracteres"),
+                    HttpStatus.BAD_REQUEST);
         }
 
         if (patient.getDescripcion() != null && patient.getDescripcion().length() > 65535) {
@@ -85,6 +87,14 @@ public class PatientService {
             patient.setEstatus(Patient.EstatusPaciente.activo);
         }
 
+        // Generar username si es nulo
+        if (patient.getUsername() == null || patient.getUsername().isEmpty()) {
+            String baseUser = (patient.getNombre() + "." + patient.getApellidos()).toLowerCase().replaceAll("\\s+", "");
+            // Agregar un sufijo aleatorio para garantizar unicidad
+            String suffix = java.util.UUID.randomUUID().toString().substring(0, 8);
+            patient.setUsername(baseUser + "." + suffix);
+        }
+
         patient.setCreatedAt(LocalDateTime.now());
         patient.setUpdatedAt(LocalDateTime.now());
         patient.setFechaIngreso(LocalDateTime.now());
@@ -98,7 +108,7 @@ public class PatientService {
         return new ResponseEntity<>(new Message("Paciente registrado correctamente", saved), HttpStatus.CREATED);
     }
 
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> update(Patient dto) {
 
         Optional<Patient> patientOptional = repo.findById(dto.getId());
@@ -116,11 +126,13 @@ public class PatientService {
         }
 
         if (dto.getApellidos() != null && dto.getApellidos().length() > 150) {
-            return new ResponseEntity<>(new Message("Los apellidos exceden los 150 caracteres"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Message("Los apellidos exceden los 150 caracteres"),
+                    HttpStatus.BAD_REQUEST);
         }
 
         if (dto.getTipoSangre() != null && dto.getTipoSangre().length() > 10) {
-            return new ResponseEntity<>(new Message("El tipo de sangre excede los 10 caracteres"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Message("El tipo de sangre excede los 10 caracteres"),
+                    HttpStatus.BAD_REQUEST);
         }
 
         Patient patient = patientOptional.get();
@@ -147,7 +159,7 @@ public class PatientService {
         return new ResponseEntity<>(new Message("El paciente se actualizó correctamente", patient), HttpStatus.OK);
     }
 
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> delete(Long id) {
         Optional<Patient> patientOptional = repo.findById(id);
 
@@ -174,8 +186,7 @@ public class PatientService {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new Message("No se pudo eliminar el paciente: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -183,7 +194,7 @@ public class PatientService {
      * Asignar una cama a un paciente
      * Valida que la cama esté libre antes de asignar
      */
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> assignBed(Long patientId, Long camaId) {
 
         // Verificar que el paciente existe
@@ -205,24 +216,21 @@ public class PatientService {
         if (patient.getCama() != null) {
             return new ResponseEntity<>(
                     new Message("El paciente ya está asignado a la cama ID: " + patient.getCama().getId()),
-                    HttpStatus.BAD_REQUEST
-            );
+                    HttpStatus.BAD_REQUEST);
         }
 
         // Verificar que la cama esté libre
         if (bed.getStatus() != Bed.BedStatus.libre) {
             return new ResponseEntity<>(
                     new Message("La cama no está disponible. Estado actual: " + bed.getStatus()),
-                    HttpStatus.BAD_REQUEST
-            );
+                    HttpStatus.BAD_REQUEST);
         }
 
         // Verificar que la cama no tenga otro paciente
         if (bed.getPaciente() != null) {
             return new ResponseEntity<>(
                     new Message("La cama ya tiene un paciente asignado"),
-                    HttpStatus.BAD_REQUEST
-            );
+                    HttpStatus.BAD_REQUEST);
         }
 
         // Asignar la cama al paciente
@@ -241,15 +249,14 @@ public class PatientService {
 
         return new ResponseEntity<>(
                 new Message("Cama asignada correctamente", patient),
-                HttpStatus.OK
-        );
+                HttpStatus.OK);
     }
 
     /**
      * Desasignar la cama de un paciente
      * Libera la cama y actualiza su estado
      */
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> unassignBed(Long patientId) {
 
         Optional<Patient> patientOptional = repo.findById(patientId);
@@ -263,8 +270,7 @@ public class PatientService {
         if (patient.getCama() == null) {
             return new ResponseEntity<>(
                     new Message("El paciente no tiene una cama asignada"),
-                    HttpStatus.BAD_REQUEST
-            );
+                    HttpStatus.BAD_REQUEST);
         }
 
         // Obtener la cama antes de desvincular
@@ -285,15 +291,14 @@ public class PatientService {
 
         return new ResponseEntity<>(
                 new Message("Cama desvinculada correctamente", patient),
-                HttpStatus.OK
-        );
+                HttpStatus.OK);
     }
 
     /**
      * Cambiar el estado de un paciente
      * Estados válidos: activo, inactivo, alta
      */
-    @Transactional(rollbackFor = {SQLException.class})
+    @Transactional(rollbackFor = { SQLException.class })
     public ResponseEntity<Message> changeStatus(Long patientId, String newStatus) {
 
         Optional<Patient> patientOptional = repo.findById(patientId);
@@ -328,14 +333,12 @@ public class PatientService {
 
             return new ResponseEntity<>(
                     new Message("Estatus del paciente actualizado correctamente", patient),
-                    HttpStatus.OK
-            );
+                    HttpStatus.OK);
 
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(
                     new Message("Estatus inválido. Los valores permitidos son: activo, inactivo, alta"),
-                    HttpStatus.BAD_REQUEST
-            );
+                    HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -350,8 +353,7 @@ public class PatientService {
 
         return new ResponseEntity<>(
                 new Message("Pacientes con cama asignada", patients),
-                HttpStatus.OK
-        );
+                HttpStatus.OK);
     }
 
     /**
@@ -365,7 +367,6 @@ public class PatientService {
 
         return new ResponseEntity<>(
                 new Message("Pacientes sin cama asignada", patients),
-                HttpStatus.OK
-        );
+                HttpStatus.OK);
     }
 }

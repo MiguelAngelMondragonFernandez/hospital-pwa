@@ -1,5 +1,6 @@
 import { url } from '../config.js';
 import { showSuccess, showError, logout } from './utils.js';
+import { writeData } from '../idb-helper.js';
 
 // DOM Elements - Tabla Principal
 const nursesTableBody = document.getElementById('nurses-table-body');
@@ -29,12 +30,12 @@ let currentNurseIdForAssignment = null;
 
 async function loadNurses() {
     try {
-        const response = await fetch(url + "/nurse/all"); 
-        
+        const response = await fetch(url + "/nurse/all");
+
         if (response.ok) {
             const data = await response.json();
-            const nurses = data.data || data; 
-            
+            const nurses = data.data || data;
+
             if (nurses && nurses.length > 0) {
                 renderNursesTable(nurses);
                 noNursesMsg.style.display = 'none';
@@ -54,7 +55,7 @@ async function loadNurses() {
 
 function renderNursesTable(nurses) {
     nursesTableBody.innerHTML = '';
-    
+
     nurses.forEach(nurse => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -98,11 +99,11 @@ function openCreateModal() {
     document.getElementById('nurse-id').value = '';
     document.getElementById('nurse-username').value = '';
     document.getElementById('nurse-password').value = '';
-    
+
     nurseModalTitle.textContent = 'Agregar Enfermero';
     passwordInput.required = true;
     passwordHint.textContent = '';
-    
+
     nurseModal.classList.remove('hidden');
 }
 
@@ -111,26 +112,26 @@ function openEditModal(id, username) {
     document.getElementById('nurse-id').value = id;
     document.getElementById('nurse-username').value = username;
     document.getElementById('nurse-password').value = ''; // Limpiamos password por seguridad
-    
+
     nurseModalTitle.textContent = 'Editar Enfermero';
-    
+
     // En editar, la contraseña suele ser opcional, pero depende de tu backend
     // Si tu backend requiere contraseña siempre, déjalo required.
     // Si no, puedes quitar el required:
     // passwordInput.required = false; 
     // passwordHint.textContent = '(Dejar en blanco para no cambiar)';
-    
+
     nurseModal.classList.remove('hidden');
 }
 
 // Guardar (Crear o Actualizar)
 async function saveNurse(e) {
     e.preventDefault();
-    
+
     const id = document.getElementById('nurse-id').value;
     const username = document.getElementById('nurse-username').value;
     const password = document.getElementById('nurse-password').value;
-    
+
     const nurseData = {
         username: username,
         password: password,
@@ -139,14 +140,45 @@ async function saveNurse(e) {
 
     // Determinamos si es Update (PUT) o Create (POST)
     const method = id ? 'PUT' : 'POST';
-    const endpoint = id ? '/nurse/update' : '/nurse/save'; // Ajusta '/nurse/update' según tu backend
+    const endpoint = id ? '/nurse/update' : '/nurse/save';
+    const fullUrl = url + endpoint;
 
-    if (id) {
-        nurseData.id = parseInt(id);
+    // Función auxiliar para guardar en Offline
+    async function handleOfflineSave() {
+        try {
+            const syncData = {
+                url: fullUrl,
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: nurseData
+            };
+
+            await writeData('sync-posts', syncData);
+
+            // Registrar Tarea de Sincronización
+            const swRegistration = await navigator.serviceWorker.ready;
+            if (swRegistration.sync) {
+                await swRegistration.sync.register('sync-nurses');
+                showSuccess('Guardado MODO OFFLINE. Se sincronizará al volver la conexión.');
+                closeNurseModal();
+            } else {
+                showError('Tu navegador no soporta Background Sync, pero se guardó localmente.');
+            }
+        } catch (err) {
+            console.error("Error saving offline:", err);
+            showError("Error al guardar en modo offline");
+        }
     }
 
+    // 1. CHEQUEO OFFLINE EXPLÍCITO
+    if (!navigator.onLine) {
+        await handleOfflineSave();
+        return;
+    }
+
+    // 2. INTENTO ONLINE
     try {
-        const response = await fetch(url + endpoint, {
+        const response = await fetch(fullUrl, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nurseData)
@@ -157,12 +189,19 @@ async function saveNurse(e) {
             closeNurseModal();
             loadNurses();
         } else {
-            const data = await response.json();
-            showError(data.message || "Error al guardar enfermero");
+            // Si el servidor responde 503 (nuestro SW offline) o falla
+            if (response.status === 503) {
+                console.warn("Recibido 503 (Offline SW), intentando guardar offline...");
+                await handleOfflineSave();
+            } else {
+                const data = await response.json();
+                showError(data.message || "Error al guardar enfermero");
+            }
         }
     } catch (error) {
-        console.error(error);
-        showError("Error de conexión");
+        console.error("Error de red al guardar:", error);
+        // Si falla el fetch por error de red
+        await handleOfflineSave();
     }
 }
 
@@ -199,7 +238,7 @@ async function openAssignModal(nurseId, nurseName) {
     currentNurseIdForAssignment = nurseId;
     assignNurseName.textContent = nurseName;
     bedsListContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando camas...</p>';
-    
+
     assignModal.classList.remove('hidden');
 
     try {
@@ -209,7 +248,7 @@ async function openAssignModal(nurseId, nurseName) {
             const allBeds = data.data || data;
 
             // Filtro para mostrar Libres y Ocupadas
-            const bedsToShow = allBeds.filter(bed => 
+            const bedsToShow = allBeds.filter(bed =>
                 bed.status === 'libre' || bed.status === 'ocupada'
             );
 
@@ -233,14 +272,14 @@ function renderBedsList(beds) {
 
     beds.forEach(bed => {
         const activeAssignment = bed.nurseAssignments && bed.nurseAssignments.find(a => a.shiftOpen === true);
-        
+
         let statusText = '';
         let statusClass = '';
 
         if (activeAssignment) {
             const nurseName = activeAssignment.nurse ? activeAssignment.nurse.username : 'Otro enfermero';
             statusText = `⚠ Asignada a: ${nurseName}`;
-            statusClass = 'text-orange-600 font-bold'; 
+            statusClass = 'text-orange-600 font-bold';
         } else {
             statusText = '✅ Sin Asignar';
             statusClass = 'text-green-600 font-medium';
@@ -250,7 +289,7 @@ function renderBedsList(beds) {
 
         const item = document.createElement('div');
         item.className = "flex flex-col p-3 border-b border-gray-100 hover:bg-gray-50 rounded transition";
-        
+
         item.innerHTML = `
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
@@ -312,7 +351,7 @@ async function saveAssignment() {
         showSuccess(`Se asignaron ${successCount} camas correctamente.`);
         closeAssignModal();
     }
-    
+
     if (errors.length > 0) {
         alert("Hubo errores en algunas asignaciones:\n" + errors.join("\n"));
     }

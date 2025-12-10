@@ -8,42 +8,64 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-6 max-w-4xl">
-        
+
         <div class="flex items-center justify-between mb-6">
             <button id="btn-back" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
                 <span class="font-medium">Volver</span>
             </button>
 
-            <button id="btn-refresh" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <button id="btn-refresh"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 <span class="font-semibold">Actualizar</span>
             </button>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-300 transition-colors duration-300"></div>
+                <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-300 transition-colors duration-300">
+                </div>
                 <div class="flex flex-col">
                     <span class="text-xs text-gray-400 uppercase font-bold tracking-wider">Estado</span>
                     <span id="status-text" class="text-sm font-bold text-gray-500">Inactivo</span>
                 </div>
             </div>
-            
+
             <div class="flex gap-2">
-                <button id="btn-start-shift" class="hidden flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <button id="btn-start-shift"
+                    class="hidden flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <span class="font-medium text-sm">Iniciar</span>
                 </button>
 
-                <button id="btn-end-shift" class="hidden flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-lg hover:bg-orange-200 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
+                <button id="btn-end-shift"
+                    class="hidden flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-lg hover:bg-orange-200 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 10a1 1 0 011-1h4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
                     <span class="font-medium text-sm">Terminar</span>
                 </button>
             </div>
@@ -52,7 +74,10 @@
         <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" /></svg>
+                    <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
+                    </svg>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Mis Camas Asignadas</h1>
@@ -62,11 +87,14 @@
         </div>
 
         <div id="beds-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            </div>
+        </div>
 
         <div id="empty-state" class="hidden bg-white rounded-2xl shadow-lg p-12 text-center">
             <div class="flex flex-col items-center">
-                <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
                 <p class="text-xl font-semibold text-gray-700 mb-2">No hay camas asignadas</p>
                 <p class="text-gray-500">Escanea un QR para comenzar.</p>
             </div>
@@ -77,258 +105,231 @@
             <div class="flex flex-col items-center">
                 <svg class="w-16 h-16 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
                 </svg>
                 <p class="text-gray-600 mt-4">Cargando camas...</p>
             </div>
         </div>
     </div>
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getMessaging, deleteToken } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
+        import { initNotifications, disableNotifications } from '../js/nurse-notifications.js';
 
-    // ===============================================
-    // 1. CONFIGURACIÓN FIREBASE
-    // ===============================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyCZgu1E_xrpOIaaSPExLzehHb9PwL1nNhA",
-        authDomain: "authfluttertwitterclone.firebaseapp.com",
-        projectId: "authfluttertwitterclone",
-        storageBucket: "authfluttertwitterclone.firebasestorage.app",
-        messagingSenderId: "485188841768",
-        appId: "1:485188841768:web:eae53681a3930b7a4fa01d"
-    };
+        // Configuración Global
+        const API_URL = 'http://localhost:8082/api';
+        let autoRefreshInterval;
 
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
+        // Inicializar Notificaciones
+        initNotifications(() => loadBeds(true));
 
-    // Configuración Global
-    const API_URL = 'http://localhost:8082/api';
-    let autoRefreshInterval;
+        // ===============================================
+        // 3. GESTIÓN DE TURNOS
+        // ===============================================
+        const btnStartShift = document.getElementById('btn-start-shift');
+        const btnEndShift = document.getElementById('btn-end-shift');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
 
-    // ===============================================
-    // 2. GESTIÓN DE NOTIFICACIONES (DESUSCRIPCIÓN)
-    // ===============================================
-    async function disableNotifications() {
-        try {
-            const result = await deleteToken(messaging);
-            if(result) {
-                console.log('🔕 Notificaciones desactivadas (Token eliminado).');
+        function updateShiftUI(isActive) {
+            if (isActive) {
+                btnStartShift.classList.add('hidden');
+                btnEndShift.classList.remove('hidden');
+                statusIndicator.classList.remove('bg-gray-300');
+                statusIndicator.classList.add('bg-green-500', 'animate-pulse');
+                statusText.textContent = "Turno Activo";
+                statusText.classList.replace('text-gray-500', 'text-green-700');
             } else {
-                console.log('No había token activo para eliminar.');
+                btnStartShift.classList.remove('hidden');
+                btnEndShift.classList.add('hidden');
+                statusIndicator.classList.remove('bg-green-500', 'animate-pulse');
+                statusIndicator.classList.add('bg-gray-300');
+                statusText.textContent = "Sin Turno";
+                statusText.classList.replace('text-green-700', 'text-gray-500');
             }
-        } catch (err) {
-            console.error('Error al intentar desactivar notificaciones:', err);
         }
-    }
 
-    // ===============================================
-    // 3. GESTIÓN DE TURNOS
-    // ===============================================
-    const btnStartShift = document.getElementById('btn-start-shift');
-    const btnEndShift = document.getElementById('btn-end-shift');
-    const statusIndicator = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
+        async function checkShiftStatus() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
+                if (!nurseId) return;
 
-    function updateShiftUI(isActive) {
-        if (isActive) {
-            btnStartShift.classList.add('hidden');
-            btnEndShift.classList.remove('hidden');
-            statusIndicator.classList.remove('bg-gray-300');
-            statusIndicator.classList.add('bg-green-500', 'animate-pulse');
-            statusText.textContent = "Turno Activo";
-            statusText.classList.replace('text-gray-500', 'text-green-700');
-        } else {
-            btnStartShift.classList.remove('hidden');
-            btnEndShift.classList.add('hidden');
-            statusIndicator.classList.remove('bg-green-500', 'animate-pulse');
-            statusIndicator.classList.add('bg-gray-300');
-            statusText.textContent = "Sin Turno";
-            statusText.classList.replace('text-green-700', 'text-gray-500');
-        }
-    }
+                const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('📊 Shift Status Response:', responseData);
 
-    async function checkShiftStatus() {
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const nurseId = user.id;
-            if (!nurseId) return;
-
-            const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
-            if (response.ok) {
-                const responseData = await response.json();
-                console.log('📊 Shift Status Response:', responseData);
-                
-                // El backend devuelve {data: [...], error: false, message: "..."}
-                const assignments = Array.isArray(responseData.data) ? responseData.data : [];
-                const isActive = assignments.length > 0;
-                updateShiftUI(isActive);
+                    // El backend devuelve {data: [...], error: false, message: "..."}
+                    const assignments = Array.isArray(responseData.data) ? responseData.data : [];
+                    const isActive = assignments.length > 0;
+                    updateShiftUI(isActive);
+                }
+            } catch (error) {
+                console.error("Error checking shift status:", error);
             }
-        } catch (error) {
-            console.error("Error checking shift status:", error);
         }
-    }
 
-    async function handleEndShift() {
-        if (!confirm("¿Desea terminar su turno? Se borrarán sus asignaciones y dejará de recibir notificaciones.")) return;
+        async function handleEndShift() {
+            if (!confirm("¿Desea terminar su turno? Se borrarán sus asignaciones y dejará de recibir notificaciones.")) return;
 
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const nurseId = user.id;
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
 
-            const response = await fetch(`${API_URL}/nurse/${nurseId}/end-all-shifts`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' }
-            });
+                const response = await fetch(`${API_URL}/nurse/${nurseId}/end-all-shifts`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-            if (response.ok) {
-                alert("Turno finalizado.");
-                
-                // Actualizar UI
-                updateShiftUI(false);
-                
-                // Limpiar caché local
-                localStorage.removeItem(`cached_assignments_${nurseId}`);
-                
-                // Recargar lista
-                loadBeds(true); 
-                
-                // Desactivar notificaciones
-                await disableNotifications(); 
+                if (response.ok) {
+                    alert("Turno finalizado.");
 
-            } else {
-                const data = await response.json();
-                alert("Error: " + (data.message || "No se pudo terminar el turno"));
+                    // Actualizar UI
+                    updateShiftUI(false);
+
+                    // Limpiar caché local
+                    localStorage.removeItem(`cached_assignments_${nurseId}`);
+
+                    // Recargar lista
+                    loadBeds(true);
+
+                    // Desactivar notificaciones
+                    await disableNotifications();
+
+                } else {
+                    const data = await response.json();
+                    alert("Error: " + (data.message || "No se pudo terminar el turno"));
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error de conexión");
             }
-        } catch (error) {
-            console.error("Error:", error);
-            alert("Error de conexión");
         }
-    }
 
-    // ===============================================
-    // 4. NAVEGACIÓN Y CONTROLES
-    // ===============================================
-    document.getElementById('btn-back').addEventListener('click', () => {
-        window.location.href = '../nurse.html';
-    });
+        // ===============================================
+        // 4. NAVEGACIÓN Y CONTROLES
+        // ===============================================
+        document.getElementById('btn-back').addEventListener('click', () => {
+            window.location.href = '../nurse.html';
+        });
 
-    document.getElementById('btn-refresh').addEventListener('click', () => {
-        loadBeds(true);
-        checkShiftStatus();
-    });
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            loadBeds(true);
+            checkShiftStatus();
+        });
 
-    btnStartShift.addEventListener('click', () => {
-        alert("Para iniciar turno, por favor escanee el código QR de una cama.");
-    });
-    
-    btnEndShift.addEventListener('click', handleEndShift);
+        btnStartShift.addEventListener('click', () => {
+            alert("Para iniciar turno, por favor escanee el código QR de una cama.");
+        });
 
-    // ===============================================
-    // 5. CONFIGURACIÓN DE ESTADOS Y FORMATO
-    // ===============================================
-    function getStatusConfig(bedStatus, hasPatient) {
-        if (!hasPatient) {
-            return {
-                bg: 'bg-gray-50',
-                border: 'border-gray-200',
-                badge: 'bg-gray-100 text-gray-700',
-                icon: '⚪',
-                label: 'Sin paciente',
-                pulse: ''
+        btnEndShift.addEventListener('click', handleEndShift);
+
+        // ===============================================
+        // 5. CONFIGURACIÓN DE ESTADOS Y FORMATO
+        // ===============================================
+        function getStatusConfig(bedStatus, hasPatient) {
+            if (!hasPatient) {
+                return {
+                    bg: 'bg-gray-50',
+                    border: 'border-gray-200',
+                    badge: 'bg-gray-100 text-gray-700',
+                    icon: '⚪',
+                    label: 'Sin paciente',
+                    pulse: ''
+                };
+            }
+
+            const configs = {
+                'ocupada': {
+                    bg: 'bg-green-50',
+                    border: 'border-green-200',
+                    badge: 'bg-green-100 text-green-700',
+                    icon: '🟢',
+                    label: 'Ocupada',
+                    pulse: ''
+                },
+                'libre': {
+                    bg: 'bg-blue-50',
+                    border: 'border-blue-200',
+                    badge: 'bg-blue-100 text-blue-700',
+                    icon: '🔵',
+                    label: 'Libre',
+                    pulse: ''
+                },
+                'limpieza': {
+                    bg: 'bg-yellow-50',
+                    border: 'border-yellow-200',
+                    badge: 'bg-yellow-100 text-yellow-700',
+                    icon: '🟡',
+                    label: 'Limpieza',
+                    pulse: 'animate-pulse'
+                },
+                'mantenimiento': {
+                    bg: 'bg-red-50',
+                    border: 'border-red-200',
+                    badge: 'bg-red-100 text-red-700',
+                    icon: '🔴',
+                    label: 'Mantenimiento',
+                    pulse: 'animate-pulse'
+                },
+                'verde': {
+                    bg: 'bg-green-50',
+                    border: 'border-green-200',
+                    badge: 'bg-green-100 text-green-700',
+                    icon: '🟢',
+                    label: 'Normal',
+                    pulse: ''
+                },
+                'amarillo': {
+                    bg: 'bg-yellow-50',
+                    border: 'border-yellow-200',
+                    badge: 'bg-yellow-100 text-yellow-700',
+                    icon: '🟡',
+                    label: 'Precaución',
+                    pulse: 'animate-pulse'
+                },
+                'rojo': {
+                    bg: 'bg-red-50',
+                    border: 'border-red-200',
+                    badge: 'bg-red-100 text-red-700',
+                    icon: '🔴',
+                    label: 'Urgente',
+                    pulse: 'animate-pulse'
+                }
             };
+
+            return configs[bedStatus] || configs['ocupada'];
         }
 
-        const configs = {
-            'ocupada': {
-                bg: 'bg-green-50',
-                border: 'border-green-200',
-                badge: 'bg-green-100 text-green-700',
-                icon: '🟢',
-                label: 'Ocupada',
-                pulse: ''
-            },
-            'libre': {
-                bg: 'bg-blue-50',
-                border: 'border-blue-200',
-                badge: 'bg-blue-100 text-blue-700',
-                icon: '🔵',
-                label: 'Libre',
-                pulse: ''
-            },
-            'limpieza': {
-                bg: 'bg-yellow-50',
-                border: 'border-yellow-200',
-                badge: 'bg-yellow-100 text-yellow-700',
-                icon: '🟡',
-                label: 'Limpieza',
-                pulse: 'animate-pulse'
-            },
-            'mantenimiento': {
-                bg: 'bg-red-50',
-                border: 'border-red-200',
-                badge: 'bg-red-100 text-red-700',
-                icon: '🔴',
-                label: 'Mantenimiento',
-                pulse: 'animate-pulse'
-            },
-            'verde': {
-                bg: 'bg-green-50',
-                border: 'border-green-200',
-                badge: 'bg-green-100 text-green-700',
-                icon: '🟢',
-                label: 'Normal',
-                pulse: ''
-            },
-            'amarillo': {
-                bg: 'bg-yellow-50',
-                border: 'border-yellow-200',
-                badge: 'bg-yellow-100 text-yellow-700',
-                icon: '🟡',
-                label: 'Precaución',
-                pulse: 'animate-pulse'
-            },
-            'rojo': {
-                bg: 'bg-red-50',
-                border: 'border-red-200',
-                badge: 'bg-red-100 text-red-700',
-                icon: '🔴',
-                label: 'Urgente',
-                pulse: 'animate-pulse'
-            }
-        };
+        function formatDate(dateString) {
+            if (!dateString) return '--';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
 
-        return configs[bedStatus] || configs['ocupada'];
-    }
+        function formatShiftTime(dateString) {
+            if (!dateString) return '--';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('es-MX', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
-    function formatDate(dateString) {
-        if (!dateString) return '--';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-MX', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
+        // ===============================================
+        // 6. CREACIÓN DE TARJETAS DE CAMAS
+        // ===============================================
+        function createBedCard(assignment) {
+            console.log(assignment)
+            const hasPatient = assignment.patientId !== null;
+            const config = getStatusConfig(assignment.bedStatus, hasPatient);
 
-    function formatShiftTime(dateString) {
-        if (!dateString) return '--';
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('es-MX', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    // ===============================================
-    // 6. CREACIÓN DE TARJETAS DE CAMAS
-    // ===============================================
-    function createBedCard(assignment) {
-        console.log(assignment)
-        const hasPatient = assignment.patientId !== null;
-        const config = getStatusConfig(assignment.bedStatus, hasPatient);
-
-        return `
+            return `
             <div class="bg-white rounded-xl shadow-md border-2 ${config.border} ${config.bg} p-5 hover:shadow-lg transition cursor-pointer" 
                 onclick="viewBedDetail(${assignment.bedId})">
 
@@ -393,165 +394,165 @@
                 </div>
             </div>
         `;
-    }
-
-    // ===============================================
-    // 7. VISUALIZACIÓN DE DETALLES DE CAMA
-    // ===============================================
-    window.viewBedDetail = async (bedId) => {
-        try {
-            const response = await fetch(`${API_URL}/bed/${bedId}/paciente`);
-            if (response.ok) {
-                const responseData = await response.json();
-                if (responseData.error) {
-                    alert('❌ ' + responseData.message);
-                    return;
-                }
-                localStorage.setItem('currentBed', JSON.stringify(responseData));
-                window.location.href = './patients.html';
-            } else {
-                alert('❌ Error al cargar información');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error de conexión');
         }
-    };
 
-    // ===============================================
-    // 8. TRANSFORMACIÓN DE DATOS
-    // ===============================================
-    function transformAssignment(a) {
-        return a; // Ya viene correcto desde el backend
-    }
-
-    // ===============================================
-    // 9. CARGA DE CAMAS
-    // ===============================================
-    async function loadBeds(forceUpdate = false) {
-        const container = document.getElementById('beds-container');
-        const emptyState = document.getElementById('empty-state');
-        const loadingState = document.getElementById('loading-state');
-
-        try {
-            container.classList.add('hidden');
-            emptyState.classList.add('hidden');
-            loadingState.classList.remove('hidden');
-
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const nurseId = user.id;
-
-            const cached = localStorage.getItem(`cached_assignments_${nurseId}`);
-
-            // Usar caché si existe y no se fuerza actualización
-            if (cached && !forceUpdate) {
-                console.log('📦 Using cached data');
-                const cachedData = JSON.parse(cached);
-                const assignments = Array.isArray(cachedData.data) ? cachedData.data : [];
-                renderBeds(assignments);
-                showOfflineIndicator();
-                loadingState.classList.add('hidden');
-                checkShiftStatus();
-                return;
-            }
-
-            // Intentar cargar desde la red
+        // ===============================================
+        // 7. VISUALIZACIÓN DE DETALLES DE CAMA
+        // ===============================================
+        window.viewBedDetail = async (bedId) => {
             try {
-                const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
-
+                const response = await fetch(`${API_URL}/bed/${bedId}/paciente`);
                 if (response.ok) {
                     const responseData = await response.json();
-                    console.log('🌐 Network Response:', responseData);
-                    
-                    // Guardar respuesta completa en caché
-                    localStorage.setItem(`cached_assignments_${nurseId}`, JSON.stringify(responseData));
-                    
-                    // El backend devuelve {data: [...], error: false, message: "..."}
-                    const assignments = Array.isArray(responseData.data) ? responseData.data : [];
-                    renderBeds(assignments);
-                    
-                    const isActive = assignments.length > 0;
-                    updateShiftUI(isActive);
-
-                    // Remover indicador offline si existe
-                    const badge = document.getElementById('offline-badge');
-                    if (badge) badge.remove();
+                    if (responseData.error) {
+                        alert('❌ ' + responseData.message);
+                        return;
+                    }
+                    localStorage.setItem('currentBed', JSON.stringify(responseData));
+                    window.location.href = './patients.html';
                 } else {
-                    throw new Error('Respuesta del servidor: ' + response.status);
+                    alert('❌ Error al cargar información');
                 }
-            } catch (networkError) {
-                console.warn('❌ Network error:', networkError);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        };
+
+        // ===============================================
+        // 8. TRANSFORMACIÓN DE DATOS
+        // ===============================================
+        function transformAssignment(a) {
+            return a; // Ya viene correcto desde el backend
+        }
+
+        // ===============================================
+        // 9. CARGA DE CAMAS
+        // ===============================================
+        async function loadBeds(forceUpdate = false) {
+            const container = document.getElementById('beds-container');
+            const emptyState = document.getElementById('empty-state');
+            const loadingState = document.getElementById('loading-state');
+
+            try {
+                container.classList.add('hidden');
+                emptyState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nurseId = user.id;
+
+                const cached = localStorage.getItem(`cached_assignments_${nurseId}`);
+
+                // Usar caché si existe y no se fuerza actualización
+                if (cached && !forceUpdate) {
+                    console.log('📦 Using cached data');
+                    const cachedData = JSON.parse(cached);
+                    const assignments = Array.isArray(cachedData.data) ? cachedData.data : [];
+                    renderBeds(assignments);
+                    showOfflineIndicator();
+                    loadingState.classList.add('hidden');
+                    checkShiftStatus();
+                    return;
+                }
+
+                // Intentar cargar desde la red
+                try {
+                    const response = await fetch(`${API_URL}/nurse/${nurseId}/assignments/active`);
+
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        console.log('🌐 Network Response:', responseData);
+
+                        // Guardar respuesta completa en caché
+                        localStorage.setItem(`cached_assignments_${nurseId}`, JSON.stringify(responseData));
+
+                        // El backend devuelve {data: [...], error: false, message: "..."}
+                        const assignments = Array.isArray(responseData.data) ? responseData.data : [];
+                        renderBeds(assignments);
+
+                        const isActive = assignments.length > 0;
+                        updateShiftUI(isActive);
+
+                        // Remover indicador offline si existe
+                        const badge = document.getElementById('offline-badge');
+                        if (badge) badge.remove();
+                    } else {
+                        throw new Error('Respuesta del servidor: ' + response.status);
+                    }
+                } catch (networkError) {
+                    console.warn('❌ Network error:', networkError);
+                    if (!cached) {
+                        container.classList.add('hidden');
+                        emptyState.classList.remove('hidden');
+                    }
+                    if (forceUpdate) {
+                        alert('❌ Modo Offline: No se pudo actualizar.');
+                    }
+                }
+
+            } catch (err) {
+                console.error('Error general:', err);
                 if (!cached) {
                     container.classList.add('hidden');
                     emptyState.classList.remove('hidden');
                 }
-                if (forceUpdate) {
-                    alert('❌ Modo Offline: No se pudo actualizar.');
-                }
+            } finally {
+                loadingState.classList.add('hidden');
             }
+        }
 
-        } catch (err) {
-            console.error('Error general:', err);
-            if (!cached) {
+        // ===============================================
+        // 10. RENDERIZADO DE CAMAS
+        // ===============================================
+        function renderBeds(assignments) {
+            const container = document.getElementById('beds-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (!assignments || assignments.length === 0) {
                 container.classList.add('hidden');
                 emptyState.classList.remove('hidden');
+                return;
             }
-        } finally {
-            loadingState.classList.add('hidden');
-        }
-    }
 
-    // ===============================================
-    // 10. RENDERIZADO DE CAMAS
-    // ===============================================
-    function renderBeds(assignments) {
-        const container = document.getElementById('beds-container');
-        const emptyState = document.getElementById('empty-state');
-
-        if (!assignments || assignments.length === 0) {
-            container.classList.add('hidden');
-            emptyState.classList.remove('hidden');
-            return;
+            container.innerHTML = assignments.map(a => createBedCard(transformAssignment(a))).join('');
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
         }
 
-        container.innerHTML = assignments.map(a => createBedCard(transformAssignment(a))).join('');
-        container.classList.remove('hidden');
-        emptyState.classList.add('hidden');
-    }
-
-    // ===============================================
-    // 11. INDICADORES Y AUTO-REFRESH
-    // ===============================================
-    function showOfflineIndicator() {
-        const header = document.querySelector('.bg-white.rounded-2xl.shadow-lg.p-6.mb-6');
-        if (header && !document.getElementById('offline-badge')) {
-            const badge = document.createElement('div');
-            badge.id = 'offline-badge';
-            badge.className = 'mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200';
-            badge.innerHTML = '📡 Modo Sin Conexión - Datos guardados';
-            header.appendChild(badge);
+        // ===============================================
+        // 11. INDICADORES Y AUTO-REFRESH
+        // ===============================================
+        function showOfflineIndicator() {
+            const header = document.querySelector('.bg-white.rounded-2xl.shadow-lg.p-6.mb-6');
+            if (header && !document.getElementById('offline-badge')) {
+                const badge = document.createElement('div');
+                badge.id = 'offline-badge';
+                badge.className = 'mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200';
+                badge.innerHTML = '📡 Modo Sin Conexión - Datos guardados';
+                header.appendChild(badge);
+            }
         }
-    }
 
-    function startAutoRefresh() {
-        autoRefreshInterval = setInterval(() => loadBeds(), 30000);
-    }
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => loadBeds(), 30000);
+        }
 
-    function stopAutoRefresh() {
-        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-    }
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        }
 
-    // ===============================================
-    // 12. INICIALIZACIÓN
-    // ===============================================
-    window.addEventListener('load', () => {
-        loadBeds();
-        checkShiftStatus();
-        startAutoRefresh();
-    });
+        // ===============================================
+        // 12. INICIALIZACIÓN
+        // ===============================================
+        window.addEventListener('load', () => {
+            loadBeds();
+            checkShiftStatus();
+            startAutoRefresh();
+        });
 
-    window.addEventListener('beforeunload', () => stopAutoRefresh());
-</script>
+        window.addEventListener('beforeunload', () => stopAutoRefresh());
+    </script>
 </body>
 
 </html>

@@ -1,5 +1,6 @@
 import { url } from '../config.js';
 import { showSuccess, showError, logout } from './utils.js';
+import { writeData } from '../idb-helper.js';
 
 // DOM Elements
 const bedsTableBody = document.getElementById('beds-table-body');
@@ -17,12 +18,12 @@ let editingBed = null;
 async function loadBeds() {
     try {
         const response = await fetch(url + "/bed/all");
-        
+
         if (response.ok) {
             const data = await response.json();
             const beds = data.data || data;
             console.log('Camas cargadas:', beds);
-            
+
             if (beds && beds.length > 0) {
                 renderBedsTable(beds);
                 noBedsMsg.style.display = 'none';
@@ -45,19 +46,19 @@ async function loadBeds() {
 
 function renderBedsTable(beds) {
     bedsTableBody.innerHTML = '';
-    
+
     beds.forEach(bed => {
         const statusClass = getStatusClass(bed.status);
-        
+
         // Obtener nombre del paciente
         let patientName = 'Sin paciente';
         if (bed.paciente) {
             patientName = `${bed.paciente.nombre || ''} ${bed.paciente.apellidos || ''}`.trim();
         }
-        
+
         // Verificar si tiene QR generado
         const hasQR = bed.qrUrl && bed.qrUrl.length > 0;
-        
+
         // Verificar si tiene paciente para deshabilitar opción "libre"
         const hasPatient = bed.paciente !== null && bed.paciente !== undefined;
         const disableLibreOption = hasPatient ? 'disabled' : '';
@@ -126,7 +127,7 @@ function renderBedsTable(beds) {
 // ==================== UTILIDADES ====================
 
 function getStatusClass(status) {
-    switch(status) {
+    switch (status) {
         case 'libre':
             return 'bg-green-100 text-green-800';
         case 'ocupada':
@@ -141,7 +142,7 @@ function getStatusClass(status) {
 }
 
 function getStatusText(status) {
-    switch(status) {
+    switch (status) {
         case 'libre':
             return 'Disponible';
         case 'ocupada':
@@ -158,7 +159,7 @@ function getStatusText(status) {
 function updateBedStatusClass(selectElement) {
     const newStatus = selectElement.value;
     const newClass = getStatusClass(newStatus);
-    
+
     selectElement.className = 'px-3 py-1 rounded text-xs font-semibold border-none cursor-pointer ' + newClass;
 }
 
@@ -166,47 +167,95 @@ function updateBedStatusClass(selectElement) {
 
 async function addBedDirectly() {
     const confirmAdd = confirm('¿Desea agregar una nueva cama?');
-    
+
     if (!confirmAdd) return;
-    
+
+    let nextNumber = 'S/N'; // Sin Número por defecto si falla todo
+
+    // Intentar obtener el número (esto podría fallar si estamos offline y sin caché)
     try {
-        // Obtener el siguiente número de cama disponible
         const response = await fetch(url + "/bed/all");
-        let nextNumber = 1;
-        
         if (response.ok) {
             const data = await response.json();
             const beds = data.data || data;
-            
             if (beds && beds.length > 0) {
-                // Encontrar el número más alto y sumar 1
                 const maxId = Math.max(...beds.map(bed => bed.id || 0));
                 nextNumber = maxId + 1;
+            } else {
+                nextNumber = 1;
             }
         }
-        
-        const bedData = {
-            nombre: `Cama ${nextNumber}`
-        };
-        
-        const saveResponse = await fetch(url + '/bed/save', {
+    } catch (e) {
+        console.warn("No se pudo calcular el número de cama (Offline?)", e);
+        nextNumber = '?';
+    }
+
+    const bedData = {
+        nombre: `Cama ${nextNumber}`
+    };
+
+    const fullUrl = url + '/bed/save';
+
+    // Función auxiliar para guardar en Offline
+    async function handleOfflineSave() {
+        try {
+            const syncData = {
+                url: fullUrl,
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: bedData
+            };
+
+            await writeData('sync-posts', syncData);
+
+            // Registrar Tarea de Sincronización
+            const swRegistration = await navigator.serviceWorker.ready;
+            if (swRegistration.sync) {
+                await swRegistration.sync.register('sync-beds');
+                showSuccess('Cama guardada MODO OFFLINE. Se sincronizará al volver la conexión.');
+                // No llamamos loadBeds() porque no tenemos nada nuevo que mostrar
+                // Opcional: Podríamos agregarla manualmente a la tabla si quisiéramos ser optimistas
+            } else {
+                showError('Tu navegador no soporta Background Sync, pero se guardó localmente.');
+            }
+        } catch (err) {
+            console.error("Error saving offline:", err);
+            showError("Error al guardar en modo offline");
+        }
+    }
+
+    // 1. CHEQUEO OFFLINE EXPLÍCITO
+    if (!navigator.onLine) {
+        await handleOfflineSave();
+        return;
+    }
+
+    // 2. INTENTO ONLINE
+    try {
+        const saveResponse = await fetch(fullUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(bedData)
         });
-        
+
         if (saveResponse.ok) {
             showSuccess('Cama agregada exitosamente');
             loadBeds();
         } else {
-            const error = await saveResponse.json();
-            showError(error.message || 'Error al agregar cama');
+            // Si el servidor responde 503 (nuestro SW offline) o falla
+            if (saveResponse.status === 503) {
+                console.warn("Recibido 503 (Offline SW), intentando guardar offline...");
+                await handleOfflineSave();
+            } else {
+                const error = await saveResponse.json();
+                showError(error.message || 'Error al agregar cama');
+            }
         }
     } catch (error) {
-        console.error('Error:', error);
-        showError('Error de conexión al agregar cama');
+        console.error('Error de red:', error);
+        await handleOfflineSave();
     }
 }
 
@@ -217,12 +266,12 @@ async function addBedDirectly() {
 
 async function deleteBed(id) {
     if (!confirm('¿Está seguro de eliminar esta cama?')) return;
-    
+
     try {
         const response = await fetch(url + `/bed/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showSuccess('Cama eliminada exitosamente');
             loadBeds();
@@ -242,9 +291,9 @@ async function changeBedStatus(bedId, newStatus, selectElement) {
         const response = await fetch(url + `/bed/${bedId}/change-status/${newStatus}`, {
             method: 'PUT'
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             showSuccess(`Estatus cambiado a: ${getStatusText(newStatus)}`);
             updateBedStatusClass(selectElement);
@@ -263,12 +312,12 @@ async function changeBedStatus(bedId, newStatus, selectElement) {
 
 async function generateQR(bedId) {
     if (!confirm('¿Desea generar el código QR para esta cama?')) return;
-    
+
     try {
         const response = await fetch(url + `/bed/${bedId}/generar-qr`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             showSuccess('Código QR generado exitosamente');
@@ -276,7 +325,7 @@ async function generateQR(bedId) {
             if (data.data && data.data.qrUrl) {
                 showQRModal(data.data.qrUrl, data.data.id);
             }
-            
+
             loadBeds();
         } else {
             const error = await response.json();
@@ -326,13 +375,13 @@ function showQRModal(qrUrl, bedId) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     modal.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', () => modal.remove());
     });
-    
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
@@ -343,11 +392,11 @@ function showQRModal(qrUrl, bedId) {
 async function viewPatientInfo(bedId) {
     try {
         const response = await fetch(url + `/bed/${bedId}/paciente`);
-        
+
         if (response.ok) {
             const data = await response.json();
             const info = data.data;
-            
+
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm';
             modal.innerHTML = `
@@ -415,13 +464,13 @@ async function viewPatientInfo(bedId) {
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
+
             modal.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', () => modal.remove());
             });
-            
+
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
@@ -444,17 +493,17 @@ function initializeEventListeners() {
     btnAddBed.addEventListener('click', addBedDirectly);
     btnRefreshBeds.addEventListener('click', loadBeds);
     btnLogout.addEventListener('click', logout);
-    
-    
+
+
     // Event delegation para la tabla
     bedsTableBody.addEventListener('click', (e) => {
         const button = e.target.closest('[data-action]');
         if (!button) return;
-        
+
         const action = button.dataset.action;
         const bedId = parseInt(button.dataset.bedId);
 
-        switch(action) {
+        switch (action) {
             case 'delete':
                 deleteBed(bedId);
                 break;
@@ -462,14 +511,14 @@ function initializeEventListeners() {
                 generateQR(bedId);
                 break;
             case 'view-qr':
-                showQRModal(button.dataset.qrUrl,bedId);
+                showQRModal(button.dataset.qrUrl, bedId);
                 break;
             case 'view-patient':
                 viewPatientInfo(bedId);
                 break;
         }
     });
-    
+
     // Cambio de estatus
     bedsTableBody.addEventListener('change', (e) => {
         if (e.target.dataset.action === 'change-status') {

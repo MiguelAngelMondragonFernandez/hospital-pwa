@@ -56,13 +56,16 @@ async function checkActiveRequest() {
 // Removed showActiveState/showInactiveState/markAsAttended as Stretcher shouldn't mark as attended.
 
 btnRequest.addEventListener('click', async () => {
-    // Disable button immediately
+    // Visual feedback: Disable button
     btnRequest.disabled = true;
+    const originalClasses = btnRequest.className;
+    btnRequest.className = "w-full bg-gray-400 cursor-not-allowed text-white font-bold py-6 px-4 rounded-2xl shadow-lg text-xl flex items-center justify-center gap-3";
 
-    // Re-enable after 5 seconds
+    // Re-enable after 7 seconds
     setTimeout(() => {
         btnRequest.disabled = false;
-    }, 5000);
+        btnRequest.className = originalClasses;
+    }, 7000);
 
     const response = await fetch(url + "/attention/save", {
         method: 'POST',
@@ -72,7 +75,7 @@ btnRequest.addEventListener('click', async () => {
         body: JSON.stringify({
             dateTime: new Date().toLocaleString(),
             status: 'Pendiente',
-            stretcherId: localStorage.getItem('stretcherId'),
+            stretcherId: localStorage.getItem('bedId'),
         })
     });
     const data = await response.json();
@@ -86,4 +89,7 @@ btnRequest.addEventListener('click', async () => {
 
 addEventListener('load', async () => {
     checkActiveRequest();
+
+    // Poll for status updates every 3 seconds
+    setInterval(checkActiveRequest, 3000);
 });

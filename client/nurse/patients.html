@@ -125,7 +125,13 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initNotifications } from '../js/nurse-notifications.js';
+
+        // Inicializar notificaciones
+        // Callback recarga datos del paciente si llega notificación
+        initNotifications(loadPatientData);
+
         const API_URL = 'http://localhost:8082/api';
 
         // Back button
